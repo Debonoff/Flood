@@ -3,57 +3,123 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{margin:0}</style>
-<title>Симулятор половодья Жабая — прототип модели HBV-Frost</title>
+<title>Как зима стала паводком — модель половодья реки Жабай</title>
 <meta name="description" content="Прототип математической модели весеннего половодья реки Жабай у Атбасара: симулятор паводка 2024 года при разных условиях зимы.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 fill=%27%23141414%27/%3E%3Cpath d=%27M4 20c4-6 8-6 12 0s8 6 12 0%27 stroke=%27%23fff%27 stroke-width=%273%27 fill=%27none%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap">
 <style>
-/* Чёрно-белый минимализм, как в презентации: слева управление, справа графики; на телефоне всё в одну колонку. */
+/* Чёрно-белый минимализм. Сверху обложка (как титульный лист), ниже — «как это работает», симулятор и данные. */
 :root {
-  --bg: #FAFAF7; --surface: #FFFFFF; --surface-2: #F0F0EC; --ink: #141414; --ink-2: #4D4D4A;
-  --muted: #6B6B66; --rule: #D6D6D1; --grid: #EAEAE6;
+  --bg: #FAFAF7; --surface: #FFFFFF; --surface-2: #F0F0EC; --soft: #F0F0EC; --ink: #141414; --ink-2: #4D4D4A;
+  --muted: #6B6B66; --rule: #D6D6D1; --grid: #EAEAE6; --line: #E4E4DF;
   --s-frost: #141414; --s-nofrost: #5E5E5A; --s-ref: #A8A8A3; --band: rgba(20,20,20,.045);
   --f-body: "Inter", "Segoe UI", -apple-system, Roboto, Arial, sans-serif;
+  --f-display: "Unbounded", "Arial Black", "Segoe UI", Arial, sans-serif;
+  --pad: max(16px, env(safe-area-inset-left, 0px));
   color-scheme: light;
 }
 * { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
 html, body { background: var(--bg); }
-body { color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
-.wrap { max-width: 1180px; margin: 0 auto; padding-block: 40px 56px;
-        padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body { margin: 0; color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
 
-header { display: flex; flex-direction: column; gap: 14px; padding-bottom: 26px; border-bottom: 2px solid var(--ink); }
-.eyebrow { font-size: 12px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-h1 { font-weight: 700; font-size: clamp(1.8rem, 4.2vw, 2.75rem); line-height: 1.1; margin: 0; letter-spacing: -.02em; text-wrap: balance; }
-.lede { margin: 0; max-width: 74ch; color: var(--ink-2); font-size: 1.04rem; }
-.how { list-style: none; margin: 6px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 28px; }
-@media (max-width: 760px) { .how { grid-template-columns: minmax(0, 1fr); gap: 10px; } }
-.how li { border-top: 1px solid var(--ink); padding-top: 10px; font-size: 13.5px; color: var(--ink-2); line-height: 1.45; }
-.how .n { display: block; font-weight: 700; font-size: 20px; color: var(--ink); line-height: 1; margin-bottom: 6px; }
-.how b { color: var(--ink); font-weight: 600; }
+/* ---------- верхнее меню */
+.nav { position: sticky; top: 0; z-index: 30; background: rgba(250,250,247,.94); backdrop-filter: blur(6px); border-bottom: 1px solid var(--rule); }
+.nav-in { max-width: 1180px; margin: 0 auto; height: 64px; padding: 0 var(--pad); display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.brand { font-family: var(--f-display); font-weight: 500; font-size: 19px; letter-spacing: .16em; text-decoration: none; }
+.nav-links { display: flex; gap: 30px; font-size: 14px; }
+.nav-links a { text-decoration: none; color: var(--ink-2); }
+.nav-links a:hover { color: var(--ink); }
+@media (max-width: 760px) { .nav-links { display: none; } }
 
-.layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 32px; margin-top: 30px; align-items: start; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; font: 600 15px/1 var(--f-body);
+       text-decoration: none; padding: 17px 26px; border: 1px solid var(--ink); background: var(--ink); color: #FFFFFF; }
+.btn:hover { background: #2B2B29; }
+.btn.light { background: var(--surface); color: var(--ink); border-color: var(--rule); }
+.btn.light:hover { border-color: var(--ink); background: var(--surface); }
+.btn.sm { padding: 11px 16px; font-size: 14px; }
+.btn svg { width: 12px; height: 12px; fill: currentColor; }
+.btn:focus-visible, .nav a:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+/* ---------- обложка */
+.hero { max-width: 1180px; margin: 0 auto; min-height: calc(100svh - 65px); padding: 48px var(--pad) 72px;
+        display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); gap: 56px; align-items: center; }
+@media (max-width: 960px) { .hero { grid-template-columns: minmax(0, 1fr); min-height: 0; gap: 44px; padding-top: 36px; } }
+.badge { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--rule); background: var(--surface); white-space: nowrap;
+         padding: 7px 12px; font-size: 11.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+.badge svg { width: 14px; height: 14px; fill: none; stroke: var(--ink); stroke-width: 2; }
+.hero h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(2.6rem, 6.2vw, 4.9rem); line-height: 1.02;
+           letter-spacing: -.02em; margin: 22px 0 24px; text-wrap: balance; }
+.hero-sub { font-size: clamp(1.05rem, 1.5vw, 1.22rem); color: var(--ink-2); max-width: 40ch; margin: 0 0 34px; line-height: 1.5; }
+.hero-cta { display: flex; flex-wrap: wrap; gap: 12px; }
+.hero-proof { display: flex; align-items: center; gap: 14px; margin-top: 40px; font-size: 14px; color: var(--ink-2); }
+.hero-proof b { color: var(--ink); font-weight: 600; }
+.dots { display: inline-flex; flex: none; }
+.dots i { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--bg); margin-left: -9px; }
+.dots i:first-child { margin-left: 0; background: #141414; }
+.dots i:nth-child(2) { background: #5E5E5A; }
+.dots i:nth-child(3) { background: #A8A8A3; }
+
+.hero-visual { position: relative; padding: 30px 0 64px 30px; }
+.spark { position: absolute; left: 0; top: 0; width: 60px; height: 60px; fill: var(--ink); z-index: 2; }
+.hv-card { background: var(--soft); padding: 26px; }
+.hv-grid { position: relative; aspect-ratio: 4 / 3; background-color: var(--surface); border: 1px solid var(--line);
+           background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+           background-size: 28px 28px; }
+.hv-grid svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hv-tag { position: absolute; left: 16px; top: 16px; background: var(--surface); border: 1px solid var(--line); padding: 5px 10px; font-size: 12px; font-weight: 500; }
+.hv-tag::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); margin-right: 7px; vertical-align: 1px; }
+.hv-demo { position: absolute; right: -12px; top: 70px; z-index: 2; box-shadow: 0 10px 24px rgba(0,0,0,.18); }
+.hv-dark { position: absolute; left: 0; bottom: 0; z-index: 2; width: min(310px, 74%); background: var(--ink); color: #FFFFFF; padding: 20px 22px 8px;
+           box-shadow: 0 16px 36px rgba(0,0,0,.22); }
+.hv-dark .t { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #A8A8A3; margin: 0 0 14px; }
+.hv-row { display: grid; grid-template-columns: 1fr auto; gap: 7px 12px; margin-bottom: 14px; font-size: 14px; }
+.hv-row b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.hv-bar { grid-column: 1 / -1; height: 5px; background: #3A3A38; }
+.hv-bar span { display: block; height: 100%; background: #FFFFFF; }
+@media (max-width: 560px) {
+  .hero-visual { padding: 22px 0 0 0; }
+  .spark { width: 40px; height: 40px; left: -6px; top: 0; }
+  .hv-card { padding: 14px; }
+  .hv-demo { display: none; }
+  .badge { font-size: 10px; letter-spacing: .08em; padding: 7px 10px; }
+  .hv-dark { position: relative; width: auto; margin: -28px 14px 0; }
+}
+
+/* ---------- разделы */
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 var(--pad) 56px; }
+.sec { padding-top: 76px; }
+.sec-head { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.sec-head h2 { font-family: var(--f-display); font-weight: 700; font-size: clamp(1.6rem, 3.3vw, 2.35rem); line-height: 1.12; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.sec-head p { margin: 0; color: var(--ink-2); max-width: 70ch; }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+@media (max-width: 760px) { .steps { grid-template-columns: minmax(0, 1fr); gap: 18px; } }
+.step { border-top: 2px solid var(--ink); padding-top: 16px; }
+.step .n { font-family: var(--f-display); font-weight: 700; font-size: 26px; line-height: 1; }
+.step h3 { font-size: 17px; margin: 14px 0 6px; }
+.step p { margin: 0; color: var(--ink-2); font-size: 14.5px; }
+
+/* ---------- симулятор */
+.layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 32px; align-items: start; }
 @media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
-
-.controls { display: flex; flex-direction: column; gap: 22px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+.controls { display: flex; flex-direction: column; gap: 22px; position: sticky; top: 84px; }
 @media (max-width: 860px) { .controls { position: static; } }
-.group-label { font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.group-label { font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
 .presets { display: flex; flex-wrap: wrap; gap: 6px; }
-.presets button { font: 500 13px/1 var(--f-body); color: var(--ink); background: var(--surface); border: 1px solid var(--rule);
-                  padding: 9px 11px; border-radius: 0; cursor: pointer; }
+.presets button { font: 500 13px/1 var(--f-body); color: var(--ink); background: var(--surface); border: 1px solid var(--rule); padding: 9px 11px; border-radius: 0; cursor: pointer; }
 .presets button:hover { border-color: var(--ink); }
 .presets button[aria-pressed="true"] { background: var(--ink); color: #FFFFFF; border-color: var(--ink); }
-.presets button:focus-visible, .toggle input:focus-visible, input[type=range]:focus-visible, .chart:focus-visible, summary:focus-visible {
-  outline: 2px solid var(--ink); outline-offset: 2px; }
-
+.presets button:focus-visible, .toggle input:focus-visible, input[type=range]:focus-visible, .chart:focus-visible, summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .slider { display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-top: 1px solid var(--rule); }
 .slider:first-of-type { border-top: none; padding-top: 0; }
 .slider-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .slider label { font-weight: 600; font-size: 13.5px; }
-.slider output { font-size: 13px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.slider output { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .slider .hint { font-size: 12px; color: var(--muted); line-height: 1.4; }
 input[type=range] { width: 100%; accent-color: var(--ink); margin: 2px 0; }
 .toggle { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; padding-top: 12px; border-top: 1px solid var(--rule); }
@@ -68,10 +134,9 @@ input[type=range] { width: 100%; accent-color: var(--ink); margin: 2px 0; }
 .tile .val { font-weight: 700; font-size: 1.5rem; line-height: 1.15; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
 .tile .val small { font-size: .8rem; font-weight: 500; color: var(--muted); margin-left: 3px; }
 .tile .ref { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.tile .delta { font-size: 12px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tile .delta { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .tile .delta[data-dir="up"]::before { content: "▲ "; }
 .tile .delta[data-dir="down"]::before { content: "▼ "; }
-
 .panel { background: var(--surface); border: 1px solid var(--rule); padding: 14px 14px 8px; margin-top: 18px; position: relative; }
 .panel h2 { font-weight: 600; font-size: 14.5px; margin: 0; }
 .panel .sub { font-size: 12px; color: var(--muted); margin: 2px 0 8px; }
@@ -82,49 +147,86 @@ input[type=range] { width: 100%; accent-color: var(--ink); margin: 2px 0; }
 .mech { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 @media (max-width: 640px) { .mech { grid-template-columns: minmax(0, 1fr); } }
 .mech .panel { margin-top: 18px; }
-
-.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--ink);
-       padding: 8px 10px; font-size: 12px; min-width: 160px; z-index: 5; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--ink); padding: 8px 10px; font-size: 12px; min-width: 160px; z-index: 5; }
 .tip .d { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
 .tip .row { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
 .tip .row b { font-weight: 600; font-variant-numeric: tabular-nums; }
 .tip .row span { color: var(--muted); display: inline-flex; align-items: center; }
-
 details { margin-top: 18px; background: var(--surface); border: 1px solid var(--rule); }
 summary { cursor: pointer; padding: 12px 14px; font-weight: 600; font-size: 13.5px; }
 .tw { overflow-x: auto; max-height: 420px; overflow-y: auto; border-top: 1px solid var(--rule); }
 table { border-collapse: collapse; width: 100%; font-size: 12.5px; min-width: 560px; }
 th, td { padding: 6px 12px; text-align: right; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
 th:first-child, td:first-child { text-align: left; }
-thead th { position: sticky; top: 0; background: var(--surface-2); font-size: 10.5px; font-weight: 500;
-           letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+thead th { position: sticky; top: 0; background: var(--surface-2); font-size: 10.5px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 
-.notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; margin-top: 44px; padding-top: 22px; border-top: 2px solid var(--ink); }
-@media (max-width: 860px) { .notes { grid-template-columns: minmax(0, 1fr); gap: 20px; } }
+/* ---------- о модели и данные: коротко */
+.notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; margin-top: 64px; padding-top: 24px; border-top: 2px solid var(--ink); }
+@media (max-width: 860px) { .notes { grid-template-columns: minmax(0, 1fr); gap: 22px; } }
 .notes h3 { font-size: 14px; margin: 0 0 8px; font-weight: 700; }
-.notes p, .notes li { font-size: 13px; color: var(--ink-2); margin: 0 0 8px; max-width: 62ch; }
+.notes p, .notes li { font-size: 13.5px; color: var(--ink-2); margin: 0 0 6px; max-width: 46ch; }
 .notes ul { margin: 0; padding-left: 1.1em; }
-.notes a, .foot a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
-.caveat { background: var(--surface-2); border-left: 3px solid var(--ink); padding: 10px 12px; font-size: 12.5px; color: var(--ink-2); margin-top: 4px; }
-.foot { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--rule); font-size: 12.5px; color: var(--muted);
+.notes a, .foot a { text-decoration: underline; text-underline-offset: 2px; }
+.foot { margin-top: 40px; padding-top: 14px; border-top: 1px solid var(--rule); font-size: 12.5px; color: var(--muted);
         display: flex; flex-wrap: wrap; gap: 6px 24px; justify-content: space-between; }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="eyebrow">Прототип · модель HBV-Frost · р. Жабай — г. Атбасар, пост № 11433</div>
-    <h1>Что было бы с половодьем 2024 года при другой зиме</h1>
-    <p class="lede">Весной 2024 года расход Жабая у Атбасара дошёл до 2570 м³/с — в 9,3 раза выше медианы годовых максимумов 2002–2024 годов (276 м³/с). Здесь работает наша математическая модель: по реальной погоде зимы 2023/24 она считает, сколько талой воды ушло в реку, а сколько впитала почва. Кружки — наблюдения Казгидромета, чёрная линия — модель.</p>
-    <ol class="how" aria-label="Как пользоваться">
-      <li><span class="n">1</span><b>Выберите сценарий</b> или двигайте ползунки — так меняется зима 2023/24.</li>
-      <li><span class="n">2</span><b>Смотрите на пик.</b> Модель заново решает семь уравнений баланса воды и перерисовывает расход реки.</li>
-      <li><span class="n">3</span><b>Включите «без мёрзлой почвы»</b>, чтобы увидеть, сколько воды в реку добавило промерзание.</li>
-    </ol>
-  </header>
+<nav class="nav" aria-label="Разделы">
+  <div class="nav-in">
+    <a class="brand" href="#top">FLOOD</a>
+    <div class="nav-links"><a href="#how">Как это работает</a><a href="#sim">Симулятор</a><a href="#data">Данные</a></div>
+    <a class="btn sm" href="#sim">Открыть симулятор</a>
+  </div>
+</nav>
 
-  <div class="layout">
+<header class="hero" id="top">
+  <div>
+    <span class="badge"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 10c2.3-3 4.7-3 7 0s4.7 3 7 0"/><path d="M1 5.5c2.3-3 4.7-3 7 0s4.7 3 7 0"/></svg>Научный проект · Прикладная математика</span>
+    <h1>Как зима стала паводком</h1>
+    <p class="hero-sub">Математическая модель весеннего половодья реки Жабай у Атбасара. Меняйте зиму 2023/24 — модель пересчитает паводок.</p>
+    <div class="hero-cta">
+      <a class="btn" href="#sim">Открыть симулятор</a>
+      <a class="btn light" href="#how"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg>Как это работает</a>
+    </div>
+    <div class="hero-proof"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>В основе — <b>23 года</b> данных Казгидромета, 8401 сутки</span></div>
+  </div>
+  <div class="hero-visual">
+    <svg class="spark" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 0C21 12 28 19 40 20 28 21 21 28 20 40 19 28 12 21 0 20 12 19 19 12 20 0z"/></svg>
+    <div class="hv-card">
+      <div class="hv-grid">
+        <svg id="hero-chart" role="img" aria-label="Расход воды у Атбасара весной 2024 года: наблюдения и модель"></svg>
+        <span class="hv-tag">Атбасар, весна 2024</span>
+      </div>
+    </div>
+    <a class="btn hv-demo" href="#sim"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg>Запустить симулятор</a>
+    <div class="hv-dark">
+      <p class="t">Пик паводка 2024</p>
+      <div id="hero-stats"></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="sec" id="how" aria-labelledby="h-how">
+    <div class="sec-head">
+      <span class="eyebrow">Как это работает</span>
+      <h2 id="h-how">Погода → модель → паводок</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><span class="n">01</span><h3>Погода</h3><p>Реальные сутки метеостанции Атбасар: 1 октября 2023 — 31 мая 2024.</p></div>
+      <div class="step"><span class="n">02</span><h3>Модель</h3><p>Снег, лёд в почве и сток — семь уравнений баланса воды, схема Рунге—Кутты.</p></div>
+      <div class="step"><span class="n">03</span><h3>Сценарий</h3><p>Меняете зиму — модель за миллисекунды пересчитывает весь сезон.</p></div>
+    </div>
+  </section>
+
+  <section class="sec" id="sim" aria-labelledby="h-sim">
+    <div class="sec-head">
+      <span class="eyebrow">Симулятор</span>
+      <h2 id="h-sim">Паводок 2024 года при другой зиме</h2>
+      <p>Кружки — наблюдения Казгидромета, чёрная линия — модель.</p>
+    </div>
+    <div class="layout">
     <aside class="controls" aria-label="Условия зимы">
       <div>
         <p class="group-label">Готовые сценарии</p>
@@ -141,25 +243,25 @@ thead th { position: sticky; top: 0; background: var(--surface-2); font-size: 10
         <div class="slider">
           <div class="slider-head"><label for="s-autumn">Осенние осадки</label><output id="o-autumn" for="s-autumn"></output></div>
           <input type="range" id="s-autumn" min="0" max="2" step="0.05" value="1">
-          <div class="hint">Октябрь–ноябрь. Чем влажнее почва ушла в зиму, тем больше в ней льда весной. Факт: 81 мм, около 175 % нормы.</div>
+          <div class="hint">Октябрь–ноябрь. Влажнее почва — больше льда весной.</div>
         </div>
         <div class="slider">
           <div class="slider-head"><label for="s-winter">Снегопады</label><output id="o-winter" for="s-winter"></output></div>
           <input type="range" id="s-winter" min="0.4" max="2" step="0.05" value="1">
-          <div class="hint">Декабрь–март. Определяет запас воды в снеге. Факт: 123 мм по осадкомеру.</div>
+          <div class="hint">Декабрь–март. Сколько воды накопится в снеге.</div>
         </div>
         <div class="slider">
           <div class="slider-head"><label for="s-cold">Морозы зимой</label><output id="o-cold" for="s-cold"></output></div>
           <input type="range" id="s-cold" min="-8" max="8" step="0.5" value="0">
-          <div class="hint">Сдвиг температуры декабря–февраля. Минус — холоднее, почва промерзает сильнее.</div>
+          <div class="hint">Декабрь–февраль. Минус — холоднее.</div>
         </div>
         <div class="slider">
           <div class="slider-head"><label for="s-spring">Тепло весной</label><output id="o-spring" for="s-spring"></output></div>
           <input type="range" id="s-spring" min="-4" max="4" step="0.25" value="0">
-          <div class="hint">Сдвиг температуры 15 марта – 30 апреля. Минус — таяние начинается позже, сдвигается на тёплые дни апреля и проходит дружнее: пик может вырасти.</div>
+          <div class="hint">15 марта — 30 апреля. Минус — таяние позже и дружнее.</div>
         </div>
         <label class="toggle" for="t-nofrost"><input type="checkbox" id="t-nofrost">
-          <span><span class="key-line dash"></span>Показать ту же модель без блока мёрзлой почвы</span></label>
+          <span><span class="key-line dash"></span>Та же модель без мёрзлой почвы</span></label>
       </div>
     </aside>
 
@@ -168,7 +270,7 @@ thead th { position: sticky; top: 0; background: var(--surface-2); font-size: 10
 
       <section class="panel" aria-labelledby="h-q">
         <h2 id="h-q">Расход воды у Атбасара, весна 2024</h2>
-        <p class="sub">м³/с · наведите курсор или выделите график и листайте стрелками</p>
+        <p class="sub">м³/с · наведите курсор на график</p>
         <div class="legend" id="legend-q"></div>
         <svg class="chart" id="chart-q" role="img" aria-labelledby="h-q" tabindex="0" height="320"></svg>
         <div class="tip" id="tip-q" hidden></div>
@@ -177,12 +279,12 @@ thead th { position: sticky; top: 0; background: var(--surface-2); font-size: 10
       <div class="mech">
         <section class="panel" aria-labelledby="h-swe">
           <h2 id="h-swe">Запас воды в снеге</h2>
-          <p class="sub">мм, по модели · пунктир — сход снега на метеоплощадке 13–14 апреля</p>
+          <p class="sub">мм · пунктир — снег сошёл 13–14 апреля</p>
           <svg class="chart" id="chart-swe" role="img" aria-labelledby="h-swe" height="190"></svg>
         </section>
         <section class="panel" aria-labelledby="h-th">
           <h2 id="h-th">Промерзание почвы θ</h2>
-          <p class="sub">0 — талая почва, 1 — поры полностью заняты льдом</p>
+          <p class="sub">0 — талая почва, 1 — промёрзла полностью</p>
           <svg class="chart" id="chart-th" role="img" aria-labelledby="h-th" height="190"></svg>
         </section>
       </div>
@@ -193,36 +295,34 @@ thead th { position: sticky; top: 0; background: var(--surface-2); font-size: 10
       </details>
     </main>
   </div>
+  </section>
 
-  <section class="notes">
+  <section class="notes" id="data">
     <div>
-      <h3>Как считает модель</h3>
-      <p>Семь дифференциальных уравнений баланса воды решаются схемой Рунге—Кутты 4-го порядка с шагом полсуток. Снег тает пропорционально температуре воздуха выше порога. Мёрзлая почва не влияет на таяние: она уменьшает впитывание талой воды, I<sub>max</sub> = I<sub>0</sub>·(1 − θ)<sup>k</sup>, и остальное стекает в реку. Льда в почве не может быть больше, чем было воды, поэтому промерзание зависит от того, насколько влажной почва ушла в зиму.</p>
-      <p>Вход — реальные суточные температура и осадки метеостанции Атбасар (ВМО 35078) с 1 октября 2023 по 31 мая 2024.</p>
+      <h3>Как считает</h3>
+      <p>Семь уравнений баланса воды, схема Рунге—Кутты 4-го порядка, шаг — полсуток. Лёд в почве уменьшает впитывание: I<sub>max</sub> = I<sub>0</sub>·(1 − θ)<sup>k</sup>.</p>
     </div>
     <div>
-      <h3>Чего модель не умеет</h3>
-      <div class="caveat" id="caveat"></div>
-      <ul style="margin-top:10px">
-        <li>Пик 11 апреля пришёлся на ледоход, а льда в русле в модели нет: она занижает пик (2121 м³/с против 2570).</li>
-        <li>Весь водосбор 8530 км² считается одной точкой, снег и промерзание везде одинаковы.</li>
-        <li>Влажность почвы на 1 октября 2023 не измерена: принята половина влагоёмкости.</li>
-        <li>Сценарии — расчёт «что если» в рамках модели, а не прогноз.</li>
+      <h3>Ограничения</h3>
+      <ul>
+        <li>Параметры подобраны по одному паводку (KGE 0,91).</li>
+        <li>Нет льда в русле: пик 2121 м³/с против 2570.</li>
+        <li>Это расчёт «что если», а не прогноз.</li>
       </ul>
     </div>
     <div>
       <h3>Данные</h3>
       <ul>
-        <li>Расходы: <a href="https://www.kazhydromet.kz/ru/gidrologiya/basseyn-reki-esil-2002-2024" target="_blank" rel="noopener">Государственный водный кадастр, ЕДС-2024, вып. 2, табл. 1.3</a>, 20.03–31.05.2024. Оперативные бюллетени завышают объём этого половодья на 34 %, поэтому взяты проверенные данные кадастра.</li>
-        <li>Погода: <a href="http://www.pogodaiklimat.ru/monitor.php?id=35078&amp;month=4&amp;year=2024" target="_blank" rel="noopener">сводки SYNOP станции Атбасар</a>.</li>
-        <li>Расход 1 %-й обеспеченности 1459 м³/с: <a href="https://doi.org/10.3390/hydrology12020035" target="_blank" rel="noopener">Nurbatsina et al., 2025</a>.</li>
+        <li>Расходы: <a href="https://www.kazhydromet.kz/ru/gidrologiya/basseyn-reki-esil-2002-2024" target="_blank" rel="noopener">кадастр ЕДС-2024</a></li>
+        <li>Погода: <a href="http://www.pogodaiklimat.ru/monitor.php?id=35078&amp;month=4&amp;year=2024" target="_blank" rel="noopener">метеостанция Атбасар</a></li>
+        <li>1 %-я обеспеченность: <a href="https://doi.org/10.3390/hydrology12020035" target="_blank" rel="noopener">Nurbatsina et al., 2025</a></li>
       </ul>
     </div>
   </section>
 
   <footer class="foot">
-    <span>Научный проект для РКНП, секция «Прикладная математика».</span>
-    <span>Прототип: расчёт «что если» в рамках модели, не официальный прогноз паводка.</span>
+    <span>Научный проект для РКНП · секция «Прикладная математика»</span>
+    <span>Прототип: не официальный прогноз паводка</span>
   </footer>
 </div>
 
@@ -571,7 +671,6 @@ function renderTable() {
 
 /* ---------------------------------------------------------------- запуск */
 function init() {
-  el("caveat").textContent = DATA.caveat;
   BASE = runAll(PRESETS.fact); Bsum = summarize(BASE);
   for (const k of ids) {
     const inp = el("s-" + k);
@@ -604,6 +703,42 @@ function init() {
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
   new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   render();
+  heroStats(); drawHero();
+  let rh = 0;
+  addEventListener("resize", () => { cancelAnimationFrame(rh); rh = requestAnimationFrame(drawHero); });
+}
+
+/* ---------------------------------------------------------------- обложка */
+function heroStats() {
+  const obsMax = Math.max(...DATA.obs.filter(v => v != null));
+  let offMax = 0;
+  for (let i = idx("2024-03-01"); i <= idx("2024-05-31"); i++) offMax = Math.max(offMax, BASE.off.q[i]);
+  const rows = [["Наблюдение", obsMax], ["Модель", Bsum.qmax], ["Без мёрзлой почвы", offMax]];
+  const box = el("hero-stats"); box.replaceChildren();
+  for (const [name, v] of rows) {
+    const r = document.createElement("div"); r.className = "hv-row";
+    const n = document.createElement("span"); n.textContent = name;
+    const b = document.createElement("b"); b.textContent = `${fmt(v)} м³/с`;
+    const bar = document.createElement("div"); bar.className = "hv-bar";
+    const f = document.createElement("span"); f.style.width = `${(100 * v / obsMax).toFixed(1)}%`;
+    bar.appendChild(f); r.append(n, b, bar); box.appendChild(r);
+  }
+}
+function drawHero() {
+  const svg = el("hero-chart"); if (!svg || !BASE) return;
+  const W = Math.max(240, svg.clientWidth), H = Math.max(160, svg.clientHeight);
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.replaceChildren();
+  const wide = matchMedia("(min-width: 561px)").matches;
+  const a = idx(wide ? "2024-02-01" : "2024-03-20"), b = idx(wide ? "2024-05-10" : "2024-05-20"), n = b - a, top = 2800;
+  const pl = 22, pr = 22, pt = 64, pb = 26;
+  const x = i => pl + (i - a) / n * (W - pl - pr);
+  const y = v => H - pb - v / top * (H - pt - pb);
+  let d = "";
+  for (let i = a; i <= b; i++) d += (i === a ? "M" : "L") + x(i).toFixed(1) + "," + y(BASE.on.q[i]).toFixed(1);
+  svgEl("path", { d: d + `L${x(b)},${y(0)}L${x(a)},${y(0)}Z`, fill: css("--ink"), "fill-opacity": 0.07 }, svg);
+  svgEl("path", { d, fill: "none", stroke: css("--ink"), "stroke-width": 2.4, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+  for (let i = a; i <= b; i++) if (DATA.obs[i] != null)
+    svgEl("circle", { cx: x(i), cy: y(DATA.obs[i]), r: 3.4, fill: css("--surface"), stroke: css("--ink"), "stroke-width": 1.5 }, svg);
 }
 init();
 </script>
