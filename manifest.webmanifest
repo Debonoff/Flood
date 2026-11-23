@@ -1,0 +1,24 @@
+{
+ "name": "Паводок на Жабае. Прогноз",
+ "short_name": "Паводок",
+ "lang": "ru",
+ "description": "Вероятность большого весеннего паводка на реке Жабай у Атбасара по модели HBV-Frost",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#FAFAF7",
+ "theme_color": "#141414",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any maskable"
+  }
+ ]
+}

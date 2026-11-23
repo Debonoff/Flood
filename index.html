@@ -3,13 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Как зима стала паводком — модель половодья реки Жабай</title>
-<meta name="description" content="Прототип математической модели весеннего половодья реки Жабай у Атбасара: симулятор паводка 2024 года при разных условиях зимы.">
+<title>Паводок на Жабае. Прогноз весеннего половодья</title>
+<meta name="description" content="Математическая модель весеннего половодья реки Жабай у Атбасара. Вероятность большого паводка на весну, ввод своих данных и проверка на 23 годах.">
+<meta name="theme-color" content="#141414">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Паводок на Жабае">
+<meta property="og:title" content="Будет ли паводок на Жабае весной?">
+<meta property="og:description" content="Вероятность большого паводка у Атбасара по модели HBV-Frost. Свежая погода ERA5, свои данные и проверка на 23 годах.">
+<meta property="og:url" content="https://debonoff.github.io/Flood/">
+<meta property="og:image" content="https://debonoff.github.io/Flood/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 fill=%27%23141414%27/%3E%3Cpath d=%27M4 20c4-6 8-6 12 0s8 6 12 0%27 stroke=%27%23fff%27 stroke-width=%273%27 fill=%27none%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap">
 <style>
+
 /* Чёрно-белый минимализм. Сверху обложка (как титульный лист), ниже — «как это работает», симулятор и данные. */
 :root {
   --bg: #FAFAF7; --surface: #FFFFFF; --surface-2: #F0F0EC; --soft: #F0F0EC; --ink: #141414; --ink-2: #4D4D4A;
@@ -169,62 +182,338 @@ thead th { position: sticky; top: 0; background: var(--surface-2); font-size: 10
 .notes a, .foot a { text-decoration: underline; text-underline-offset: 2px; }
 .foot { margin-top: 40px; padding-top: 14px; border-top: 1px solid var(--rule); font-size: 12.5px; color: var(--muted);
         display: flex; flex-wrap: wrap; gap: 6px 24px; justify-content: space-between; }
+
+
+/* ---------- приложение-прогноз */
+@media (max-width: 760px) {
+  .nav-in { height: auto; flex-wrap: wrap; padding-top: 12px; padding-bottom: 10px; gap: 8px 16px; }
+  .nav-links { display: flex; order: 3; width: 100%; overflow-x: auto; gap: 18px; font-size: 13.5px; padding-bottom: 2px; scrollbar-width: none; }
+  .nav-links::-webkit-scrollbar { display: none; }
+  .nav-links a { white-space: nowrap; }
+  html { scroll-padding-top: 104px; }
+}
+.hero h1 { font-size: clamp(2.3rem, 5.2vw, 4.1rem); margin: 20px 0 12px; }
+.hero-sub { margin-bottom: 22px; }
+.prob { display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; margin: 0 0 6px; }
+.prob .num { font-family: var(--f-display); font-weight: 700; font-size: clamp(3.6rem, 10vw, 6rem); line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.prob .cap { font-size: 14.5px; color: var(--ink-2); max-width: 24ch; padding-bottom: 6px; line-height: 1.35; }
+.hero-risk { font-size: 14.5px; margin: 10px 0 4px; font-weight: 600; max-width: 46ch; }
+.hero-meta { font-size: 13px; color: var(--muted); margin: 0 0 24px; max-width: 52ch; }
+.hero-meta a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.hv-card svg.chart { background: var(--surface); }
+.key-line.dotted { background: repeating-linear-gradient(90deg, var(--ink-2) 0 2px, transparent 2px 5px); }
+.key-band { display: inline-block; width: 18px; height: 10px; background: var(--ink); margin-right: 7px; flex: none; }
+.h3 { font-size: 15px; font-weight: 700; margin: 30px 0 0; }
+.state-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin-top: 12px; }
+@media (max-width: 760px) { .state-grid { grid-template-columns: minmax(0, 1fr); } }
+.state { background: var(--surface); padding: 12px 14px 12px; min-width: 0; }
+.state .lbl { font-size: 12px; color: var(--muted); }
+.state .val { font-weight: 700; font-size: 1.45rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.state svg { display: block; width: 100%; margin: 4px 0 2px; }
+.state .txt { font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
+.callout { margin-top: 18px; border-left: 3px solid var(--ink); background: var(--surface); padding: 12px 16px; font-size: 14px; color: var(--ink-2); max-width: 90ch; }
+.callout.strong { color: var(--ink); font-weight: 500; }
+.row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 16px; }
+.status { font-size: 12.5px; color: var(--muted); }
+.field { display: flex; flex-direction: column; gap: 6px; padding: 12px 0; border-top: 1px solid var(--rule); }
+.controls .field:first-child { border-top: none; padding-top: 0; }
+.field label, .field .label { font-weight: 600; font-size: 13.5px; }
+.field input, .field select { font: 500 15px/1.2 var(--f-body); padding: 10px 12px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); width: 100%; border-radius: 0; }
+.field input:focus-visible, .field select:focus-visible, .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.field .hint { font-size: 12px; color: var(--muted); }
+.pickers { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 18px 28px; align-items: start; margin-bottom: 18px; }
+@media (max-width: 760px) { .pickers { grid-template-columns: minmax(0, 1fr); } }
+.pickers .field { border-top: none; padding: 0; }
+.pickers .toggle { grid-column: 1 / -1; border-top: none; padding-top: 0; }
+.verdict { font-weight: 600; font-size: 15.5px; margin: 16px 0 0; max-width: 80ch; }
+.small-note { font-size: 12.5px; color: var(--muted); margin: 10px 0 0; max-width: 90ch; }
+#c-issues { margin: 4px 0 8px; }
+.sec-head p { max-width: 78ch; }
+.hero-visual { padding: 30px 0 0 30px; }
+.hv-card { padding: 18px; }
+.hero-visual .hv-dark { position: relative; width: auto; left: auto; bottom: auto; margin: 14px 0 0; padding: 18px 22px 10px; }
+.hv-row { grid-template-columns: minmax(0, 1fr) auto; }
+@media (max-width: 560px) { .hero-visual { padding: 18px 0 0 0; } .hero-visual .hv-dark { margin: 12px 0 0; } }
+@media (max-width: 560px) { .tiles > .tile:last-child:nth-child(odd) { grid-column: 1 / -1; } }
+.esp-steps { list-style: none; padding: 0; margin: 0 0 18px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); counter-reset: none; }
+.esp-steps li { background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 3px; font-size: 13px; color: var(--ink-2); line-height: 1.4; position: relative; }
+.esp-steps b { color: var(--ink); font-size: 14px; }
+.esp-steps .n { width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: #FFFFFF; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+.esp-steps li:not(:last-child)::after { content: "→"; position: absolute; right: -9px; top: 14px; z-index: 1; background: var(--surface); color: var(--muted); font-size: 13px; line-height: 1; padding: 2px 0; }
+@media (max-width: 760px) { .esp-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } .esp-steps li::after { display: none; } }
+.hero-track { font-size: 13.5px; color: var(--ink-2); margin: -2px 0 10px; max-width: 52ch; line-height: 1.45; }
+.math-h { font-size: 15px; font-weight: 700; margin: 24px 0 6px; }
+.lab-slider { max-width: 520px; border-top: none; }
+.ptw { max-height: none; }
+.alarm { margin: 0 0 14px; }
+.alarm .btn { margin-left: 6px; padding: 7px 12px; font-size: 13px; }
+.lg-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; flex: none; box-sizing: border-box; }
+.lg-dot.fill { background: var(--ink); }
+.lg-dot.open { background: var(--surface); border: 1.4px solid var(--s-nofrost); }
+.lg-tick { display: inline-block; width: 14px; height: 2px; background: var(--ink-2); margin-right: 7px; flex: none; }
+.why-detail { font-size: 14px; color: var(--ink-2); margin: 8px 0 6px; min-height: 2.8em; max-width: 92ch; line-height: 1.45; }
+.lead-note { font-size: 15px; font-weight: 500; margin: 14px 0 0; max-width: 92ch; line-height: 1.45; }
+.state-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 760px) { .state-grid.two { grid-template-columns: minmax(0, 1fr); } }
+.duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; align-items: start; }
+@media (max-width: 900px) { .duo { grid-template-columns: minmax(0, 1fr); } }
+.yr-nav { display: flex; gap: 6px; align-items: stretch; }
+.yr-nav select { flex: 1; min-width: 0; }
+.yr-nav .btn { padding: 0 12px; min-width: 42px; font-size: 16px; }
+.chart .col { cursor: pointer; }
+.chart .col:focus-visible { outline: none; }
+.chart .col:focus-visible rect { stroke: var(--ink); stroke-width: 1.5; }
+.math { margin-top: 18px; }
+.math-wrap { padding: 4px 16px 16px; border-top: 1px solid var(--rule); }
+.math-wrap p { font-size: 14px; color: var(--ink-2); max-width: 92ch; }
+.math-wrap math { font-size: 1.12em; margin: 12px 0; }
+.math-wrap .mscroll { overflow-x: auto; }
+.math-wrap ul { columns: 2 300px; column-gap: 32px; font-size: 13.5px; color: var(--ink-2); padding-left: 1.1em; margin: 6px 0 0; }
+.math-wrap li { margin: 0 0 4px; break-inside: avoid; }
+#bulletin { display: none; }
+@media print {
+  @page { size: A4; margin: 11mm 12mm; }
+  html, body { background: #FFFFFF !important; }
+  body > *:not(#bulletin) { display: none !important; }
+  #bulletin { display: block !important; color: #141414; font: 10pt/1.4 var(--f-body); }
+}
+#bulletin .b-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; border-bottom: 1.5px solid #141414; padding-bottom: 6px; }
+#bulletin .b-title { font-size: 14.5pt; font-weight: 700; margin: 0; }
+#bulletin .b-meta { font-size: 9pt; color: #4D4D4A; margin: 2px 0 0; }
+#bulletin .b-qr { width: 74px; height: 74px; }
+#bulletin .b-main { display: flex; align-items: flex-end; gap: 14px; margin: 10px 0 4px; }
+#bulletin .b-num { font-size: 38pt; font-weight: 700; line-height: .9; letter-spacing: -1px; }
+#bulletin .b-cap { font-size: 10.5pt; max-width: 62ch; }
+#bulletin table { width: 100%; border-collapse: collapse; margin: 8px 0 2px; font-size: 8.5pt; color: #4D4D4A; }
+#bulletin td { border: 1px solid #D6D6D1; padding: 4px 7px; vertical-align: top; width: 33%; text-align: left; }
+#bulletin td b { display: block; font-size: 11.5pt; color: #141414; }
+#bulletin h3 { font-size: 10pt; margin: 9px 0 2px; }
+#bulletin p { margin: 3px 0; }
+#bulletin .b-note { font-size: 8.5pt; color: #4D4D4A; }
+#bulletin svg { display: block; width: 100%; height: auto; }
+#bulletin .b-foot { margin-top: 8px; padding-top: 5px; border-top: 1px solid #999999; font-size: 8pt; color: #4D4D4A; }
+.math-wrap mtd { padding: 5px 3px; math-style: normal; }
+.math-wrap mtd:first-child { text-align: right; }
+.math-wrap mtd:last-child { text-align: left; }
 </style>
 </head>
 <body>
+<section id="bulletin" aria-hidden="true"></section>
 <nav class="nav" aria-label="Разделы">
   <div class="nav-in">
     <a class="brand" href="#top">FLOOD</a>
-    <div class="nav-links"><a href="#how">Как это работает</a><a href="#sim">Симулятор</a><a href="#data">Данные</a></div>
-    <a class="btn sm" href="#sim">Открыть симулятор</a>
+    <div class="nav-links"><a href="#forecast">Прогноз</a><a href="#input">Свои данные</a><a href="#past">Прошлые годы</a><a href="#check">Проверка</a><a href="#sim">Паводок 2024</a><a href="#about">Как устроено</a></div>
+    <button class="btn sm" id="btn-refresh" type="button">Обновить погоду</button>
   </div>
 </nav>
 
 <header class="hero" id="top">
   <div>
     <span class="badge"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 10c2.3-3 4.7-3 7 0s4.7 3 7 0"/><path d="M1 5.5c2.3-3 4.7-3 7 0s4.7 3 7 0"/></svg>Научный проект · Прикладная математика</span>
-    <h1>Как зима стала паводком</h1>
-    <p class="hero-sub">Математическая модель весеннего половодья реки Жабай у Атбасара. Меняйте зиму 2023/24 — модель пересчитает паводок.</p>
+    <h1>Будет ли паводок на Жабае весной <span id="hero-spring">2027</span>?</h1>
+    <p class="hero-sub">Модель знает погоду этой осени. Зиму и весну она пробует 115 раз, по погоде каждого из 23 прошлых лет и с пятью наборами параметров, и считает, как часто выходит большой паводок.</p>
+    <div class="prob"><span class="num" id="hero-prob">…</span><span class="cap">вероятность большого паводка, пик от 500 м³/с у Атбасара</span></div>
+    <p class="hero-risk" id="hero-risk"></p>
+    <p class="hero-track" id="hero-track"></p>
+    <p class="hero-meta"><span id="hero-meta"></span> <a href="#why">Почему такой прогноз</a></p>
     <div class="hero-cta">
-      <a class="btn" href="#sim">Открыть симулятор</a>
-      <a class="btn light" href="#how"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg>Как это работает</a>
+      <a class="btn" href="#input">Ввести свои данные</a>
+      <a class="btn light" href="#past"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg>Проверить на прошлых годах</a>
     </div>
-    <div class="hero-proof"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span>В основе — <b>23 года</b> данных Казгидромета, 8401 сутки</span></div>
   </div>
   <div class="hero-visual">
     <svg class="spark" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 0C21 12 28 19 40 20 28 21 21 28 20 40 19 28 12 21 0 20 12 19 19 12 20 0z"/></svg>
     <div class="hv-card">
-      <div class="hv-grid">
-        <svg id="hero-chart" role="img" aria-label="Расход воды у Атбасара весной 2024 года: наблюдения и модель"></svg>
-        <span class="hv-tag">Атбасар, весна 2024</span>
-      </div>
+      <svg class="chart" id="hero-fan" height="300" role="img" aria-label="Варианты расхода воды у Атбасара весной по прогнозу"></svg>
     </div>
-    <a class="btn hv-demo" href="#sim"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg>Запустить симулятор</a>
     <div class="hv-dark">
-      <p class="t">Пик паводка 2024</p>
+      <p class="t">Прогноз пика</p>
       <div id="hero-stats"></div>
     </div>
   </div>
 </header>
 
 <div class="wrap">
-  <section class="sec" id="how" aria-labelledby="h-how">
+  <section class="sec" id="forecast" aria-labelledby="h-fc">
     <div class="sec-head">
-      <span class="eyebrow">Как это работает</span>
-      <h2 id="h-how">Погода → модель → паводок</h2>
+      <span class="eyebrow">Прогноз</span>
+      <h2 id="h-fc">Прогноз на весну подробно</h2>
+      <p>Модель досчитала погоду этой осени до даты выпуска. Дальше она по очереди подставляет погоду каждого из 23 прошлых лет и делает это для пяти наборов параметров, всего 115 вариантов паводка. Вероятность равна доле вариантов с пиком от 500 м³/с.</p>
     </div>
-    <div class="steps">
-      <div class="step"><span class="n">01</span><h3>Погода</h3><p>Реальные сутки метеостанции Атбасар: 1 октября 2023 — 31 мая 2024.</p></div>
-      <div class="step"><span class="n">02</span><h3>Модель</h3><p>Снег, лёд в почве и сток — семь уравнений баланса воды, схема Рунге—Кутты.</p></div>
-      <div class="step"><span class="n">03</span><h3>Сценарий</h3><p>Меняете зиму — модель за миллисекунды пересчитывает весь сезон.</p></div>
+    <ol class="esp-steps" aria-label="Как считается прогноз">
+      <li><span class="n">1</span><b>Осень известна</b><span id="es-1"></span></li>
+      <li><span class="n">2</span><b>Состояние сейчас</b><span id="es-2"></span></li>
+      <li><span class="n">3</span><b>115 вариантов</b><span id="es-3"></span></li>
+      <li><span class="n">4</span><b>Вероятность</b><span id="es-4"></span></li>
+    </ol>
+    <div class="tiles" id="f-tiles" aria-live="polite"></div>
+    <section class="panel" aria-labelledby="h-fch">
+      <h2 id="h-fch">Расход воды у Атбасара, варианты прогноза</h2>
+      <p class="sub">м³/с, с 1 марта по 30 июня</p>
+      <div class="legend" id="f-legend"></div>
+      <svg class="chart" id="f-chart" height="320" role="img" aria-labelledby="h-fch"></svg>
+    </section>
+    <section class="panel" id="why" aria-labelledby="h-why">
+      <h2 id="h-why">Почему такой прогноз</h2>
+      <p class="sub">Пик каждого из 115 вариантов, м³/с, шкала логарифмическая. Столбик это зима и весна как в одном из прошлых лет, пять точек это пять наборов параметров. Нажмите на столбик.</p>
+      <div class="legend" id="w-legend"></div>
+      <svg class="chart" id="w-chart" height="290" role="img" aria-labelledby="h-why"></svg>
+      <p class="why-detail" id="w-detail" aria-live="polite"></p>
+    </section>
+    <p class="lead-note" id="w-sum"></p>
+    <h3 class="h3">Что модель видит сейчас</h3>
+    <div class="state-grid">
+      <div class="state"><div class="lbl">Влажность почвы</div><div class="val" id="s-sm-val"></div><svg id="s-sm-plot" height="44" role="img"></svg><div class="txt" id="s-sm-txt"></div></div>
+      <div class="state"><div class="lbl">Вода в снеге</div><div class="val" id="s-snow-val"></div><svg id="s-snow-plot" height="44" role="img"></svg><div class="txt" id="s-snow-txt"></div></div>
+      <div class="state"><div class="lbl">Лёд в почве θ</div><div class="val" id="s-th-val"></div><svg id="s-th-plot" height="44" role="img"></svg><div class="txt" id="s-th-txt"></div></div>
     </div>
+    <p class="small-note">Серые точки показывают то же самое на эту дату в каждом году с 2002 по 2024, чёрная черта показывает этот год.</p>
+    <h3 class="h3">Погода этого сезона</h3>
+    <div class="state-grid two">
+      <div class="state"><div class="lbl">Осадки с 1 июля</div><div class="val" id="s-p-val"></div><svg id="s-p-plot" height="44" role="img"></svg><div class="txt" id="s-p-txt"></div></div>
+      <div class="state"><div class="lbl">Средняя температура за последние 30 дней</div><div class="val" id="s-t-val"></div><svg id="s-t-plot" height="44" role="img"></svg><div class="txt" id="s-t-txt"></div></div>
+    </div>
+    <p class="small-note">Это сама погода ERA5, без модели. Серые точки показывают те же дни в 2002–2024 годах.</p>
+    <div class="duo">
+      <section class="panel" aria-labelledby="h-aut">
+        <h2 id="h-aut">Влажная осень, большой паводок</h2>
+        <p class="sub">Влажность почвы по модели на ту же дату и наблюдённый пик весной, 2002–2024, шкала пика логарифмическая</p>
+        <svg class="chart" id="a-chart" height="300" role="img" aria-labelledby="h-aut"></svg>
+        <p class="why-detail" id="a-txt"></p>
+      </section>
+      <section class="panel" aria-labelledby="h-evo">
+        <h2 id="h-evo">Как менялся прогноз этой осенью</h2>
+        <p class="sub">Вероятность большого паводка, если бы прогноз выпускали в эти дни</p>
+        <svg class="chart" id="e-chart" height="300" role="img" aria-labelledby="h-evo"></svg>
+        <p class="why-detail" id="e-txt">Считаю…</p>
+      </section>
+    </div>
+    <div class="callout" id="f-skill"></div>
+    <div class="row-actions">
+      <button class="btn sm light" id="btn-refresh-2" type="button">Обновить погоду</button>
+      <button class="btn sm light" id="btn-print" type="button">Печать или PDF</button>
+      <button class="btn sm light" id="btn-csv" type="button">115 вариантов в CSV</button>
+      <button class="btn sm light" id="btn-share" type="button">Поделиться</button>
+      <button class="btn sm" id="btn-install" type="button" hidden>Установить на телефон</button>
+      <span class="status" id="data-status" aria-live="polite"></span>
+    </div>
+    <p class="small-note" id="ios-hint" hidden>На iPhone приложение можно поставить на экран телефона. Откройте сайт в Safari, нажмите «Поделиться» и выберите «На экран Домой».</p>
+  </section>
+
+  <section class="sec" id="input" aria-labelledby="h-in">
+    <div class="sec-head">
+      <span class="eyebrow">Свои данные</span>
+      <h2 id="h-in">Что будет, если</h2>
+      <p>Введите измерения, например запас воды в снеге из снегомерной съёмки, или задайте, какой будет зима и весна. Модель сразу пересчитает прогноз.</p>
+    </div>
+    <div class="layout">
+      <aside class="controls" aria-label="Ввод данных">
+        <div class="field">
+          <label for="u-snow">Вода в снеге на дату прогноза, мм</label>
+          <input id="u-snow" type="text" inputmode="decimal" autocomplete="off">
+          <div class="hint" id="u-snow-ref"></div>
+          <div class="presets"><button type="button" data-uset="snow:50">50 мм</button><button type="button" data-uset="snow:100">100 мм</button><button type="button" data-uset="snow:150">150 мм</button></div>
+        </div>
+        <div class="field">
+          <label for="u-sm">Влажность почвы в модели, % от наибольшего запаса</label>
+          <input id="u-sm" type="text" inputmode="decimal" autocomplete="off">
+          <div class="hint" id="u-sm-ref"></div>
+          <div class="presets"><button type="button" id="u-sm-dry" data-uset="sm:23">сухо</button><button type="button" id="u-sm-mid" data-uset="sm:34">обычно</button><button type="button" id="u-sm-2024" data-uset="sm:54">как перед паводком 2024</button></div>
+        </div>
+        <div class="slider">
+          <div class="slider-head"><label for="u-winter">Снег и осадки до конца февраля</label><output id="uo-winter" for="u-winter"></output></div>
+          <input type="range" id="u-winter" min="0.5" max="2" step="0.1" value="1">
+          <div class="hint">×1 значит как в прошлых годах, ×1,5 значит в полтора раза больше.</div>
+        </div>
+        <div class="slider">
+          <div class="slider-head"><label for="u-spring">Температура весной, с марта по май</label><output id="uo-spring" for="u-spring"></output></div>
+          <input type="range" id="u-spring" min="-3" max="3" step="0.5" value="0">
+          <div class="hint">Минус значит холоднее, таяние позже и дружнее.</div>
+        </div>
+        <div class="field">
+          <label for="u-donor">Погода после даты прогноза</label>
+          <select id="u-donor"><option value="0">все 23 года, вероятность</option></select>
+        </div>
+        <button class="btn sm light" id="u-reset" type="button">Сбросить</button>
+      </aside>
+      <main style="min-width:0">
+        <div class="callout alarm"><b>Порог тревоги.</b> <span id="u-alarm-txt">Считаю, при каких осадках зимы шансы станут 50 на 50…</span> <button class="btn sm light" id="u-alarm-btn" type="button" hidden>Показать на графике</button></div>
+        <div class="tiles" id="u-tiles" aria-live="polite"></div>
+        <section class="panel" aria-labelledby="h-uch">
+          <h2 id="h-uch">Ваш сценарий</h2>
+          <p class="sub">м³/с, с 1 марта по 30 июня</p>
+          <div class="legend" id="u-legend"></div>
+          <svg class="chart" id="u-chart" height="300" role="img" aria-labelledby="h-uch"></svg>
+        </section>
+        <p class="small-note">Это расчёт «что если». Проверен на 23 годах только прогноз без ввода, он в разделе «Проверка». Влажность почвы меняет и лёд в почве, потому что лёд не может занять больше пор, чем было заполнено водой.</p>
+      </main>
+    </div>
+  </section>
+
+  <section class="sec" id="past" aria-labelledby="h-past">
+    <div class="sec-head">
+      <span class="eyebrow">Прошлые годы</span>
+      <h2 id="h-past">Проверьте модель сами</h2>
+      <p>Выберите год и дату выпуска. Модель не знает, что было дальше. Параметры подобраны на других годах, а погоду после даты выпуска она берёт из остальных 22 лет. Кружки показывают, что было на самом деле.</p>
+    </div>
+    <div class="pickers">
+      <div class="field"><label for="h-year">Год</label><div class="yr-nav"><button type="button" class="btn sm light" id="h-prev" aria-label="Предыдущий год">←</button><select id="h-year"></select><button type="button" class="btn sm light" id="h-next" aria-label="Следующий год">→</button></div></div>
+      <div><p class="group-label">Дата выпуска прогноза</p><div class="presets" id="h-issues"></div></div>
+      <label class="toggle" for="h-off"><input type="checkbox" id="h-off"><span><span class="key-line dash"></span>Показать ту же модель без мёрзлой почвы</span></label>
+    </div>
+    <div class="tiles" id="h-tiles" aria-live="polite"></div>
+    <p class="verdict" id="h-verdict"></p>
+    <section class="panel" aria-labelledby="h-issh">
+      <h2 id="h-issh">Как менялся прогноз для этого года</h2>
+      <p class="sub" id="h-iss-sub"></p>
+      <svg class="chart" id="h-iss" height="190" role="img" aria-labelledby="h-issh"></svg>
+    </section>
+    <section class="panel" aria-labelledby="h-hch">
+      <h2 id="h-hch">Прогноз и факт</h2>
+      <p class="sub">м³/с, с 1 марта по 30 июня</p>
+      <div class="legend" id="h-legend"></div>
+      <svg class="chart" id="h-chart" height="320" role="img" aria-labelledby="h-hch"></svg>
+    </section>
+    <p class="small-note" id="h-note"></p>
+  </section>
+
+  <section class="sec" id="check" aria-labelledby="h-check">
+    <div class="sec-head">
+      <span class="eyebrow">Проверка</span>
+      <h2 id="h-check">Как часто модель права</h2>
+      <p>Каждый из 23 лет мы прогнозировали так, будто он ещё не наступил. AUC показывает, насколько прогноз отличает годы с большим паводком от остальных. 0,5 значит угадывание, 1 значит без ошибок.</p>
+    </div>
+    <div class="callout strong" id="c-dec"></div>
+    <section class="panel" aria-labelledby="h-cauc">
+      <h2 id="h-cauc">AUC по дате выпуска прогноза</h2>
+      <p class="sub">чем раньше прогноз, тем меньше известно о зиме</p>
+      <div class="legend" id="c-legend"></div>
+      <svg class="chart" id="c-auc" height="260" role="img" aria-labelledby="h-cauc"></svg>
+    </section>
+    <section class="panel" aria-labelledby="h-cyr">
+      <h2 id="h-cyr">Прогноз против факта по годам</h2>
+      <p class="sub" id="c-years-sub"></p>
+      <div class="presets" id="c-issues"></div>
+      <svg class="chart" id="c-years" height="220" role="img" aria-labelledby="h-cyr"></svg>
+    </section>
+    <section class="panel" aria-labelledby="h-crisk">
+      <h2 id="h-crisk">Что значили уровни риска</h2>
+      <p class="sub">Сколько раз был большой паводок в прошлые годы, когда прогноз попадал в эту полосу</p>
+      <div class="tw"><table><thead><tr><th>Дата выпуска</th><th>Риск низкий, ниже 20 %</th><th>Средний, от 20 до 50 %</th><th>Высокий, 50 % и выше</th></tr></thead><tbody id="c-risk"></tbody></table></div>
+    </section>
+    <details open>
+      <summary>Таблица оценок модели с мёрзлой почвой</summary>
+      <div class="tw"><table><thead><tr><th>Дата выпуска</th><th>AUC (p)</th><th>BSS (95 % ДИ)</th><th>Попаданий при P от 0,5</th><th>Ложных тревог</th><th>AUC без мёрзлой почвы</th><th>AUC по осадкам</th></tr></thead><tbody id="c-tbody"></tbody></table></div>
+    </details>
+    <p class="small-note">BSS сравнивает вероятности с обычной частотой паводков. Больше нуля значит лучше нормы, но интервал почти везде захватывает ноль, 23 лет мало, чтобы это доказать. Выпуски 15 ноября и 1 декабря посчитаны после подачи работы тем же методом, что и остальные.</p>
+    <div class="row-actions"><button class="btn sm light" id="btn-csv-hind" type="button">Ретропрогноз 2002–2024 в CSV</button></div>
   </section>
 
   <section class="sec" id="sim" aria-labelledby="h-sim">
     <div class="sec-head">
-      <span class="eyebrow">Симулятор</span>
+      <span class="eyebrow">Паводок 2024</span>
       <h2 id="h-sim">Паводок 2024 года при другой зиме</h2>
-      <p>Кружки — наблюдения Казгидромета, чёрная линия — модель.</p>
+      <p>Тот же расчёт на погоде метеостанции Атбасар. Меняйте условия зимы, модель пересчитает паводок. Кружки показывают наблюдения Казгидромета.</p>
     </div>
     <div class="layout">
     <aside class="controls" aria-label="Условия зимы">
@@ -243,7 +532,7 @@ thead th { position: sticky; top: 0; background: var(--surface-2); font-size: 10
         <div class="slider">
           <div class="slider-head"><label for="s-autumn">Осенние осадки</label><output id="o-autumn" for="s-autumn"></output></div>
           <input type="range" id="s-autumn" min="0" max="2" step="0.05" value="1">
-          <div class="hint">Октябрь–ноябрь. Влажнее почва — больше льда весной.</div>
+          <div class="hint">Октябрь–ноябрь. Чем влажнее почва, тем больше льда весной.</div>
         </div>
         <div class="slider">
           <div class="slider-head"><label for="s-winter">Снегопады</label><output id="o-winter" for="s-winter"></output></div>
@@ -253,12 +542,12 @@ thead th { position: sticky; top: 0; background: var(--surface-2); font-size: 10
         <div class="slider">
           <div class="slider-head"><label for="s-cold">Морозы зимой</label><output id="o-cold" for="s-cold"></output></div>
           <input type="range" id="s-cold" min="-8" max="8" step="0.5" value="0">
-          <div class="hint">Декабрь–февраль. Минус — холоднее.</div>
+          <div class="hint">Декабрь–февраль. Минус значит холоднее.</div>
         </div>
         <div class="slider">
           <div class="slider-head"><label for="s-spring">Тепло весной</label><output id="o-spring" for="s-spring"></output></div>
           <input type="range" id="s-spring" min="-4" max="4" step="0.25" value="0">
-          <div class="hint">15 марта — 30 апреля. Минус — таяние позже и дружнее.</div>
+          <div class="hint">С 15 марта по 30 апреля. Минус значит таяние позже и дружнее.</div>
         </div>
         <label class="toggle" for="t-nofrost"><input type="checkbox" id="t-nofrost">
           <span><span class="key-line dash"></span>Та же модель без мёрзлой почвы</span></label>
@@ -279,12 +568,12 @@ thead th { position: sticky; top: 0; background: var(--surface-2); font-size: 10
       <div class="mech">
         <section class="panel" aria-labelledby="h-swe">
           <h2 id="h-swe">Запас воды в снеге</h2>
-          <p class="sub">мм · пунктир — снег сошёл 13–14 апреля</p>
+          <p class="sub">мм, пунктир показывает сход снега 13–14 апреля</p>
           <svg class="chart" id="chart-swe" role="img" aria-labelledby="h-swe" height="190"></svg>
         </section>
         <section class="panel" aria-labelledby="h-th">
           <h2 id="h-th">Промерзание почвы θ</h2>
-          <p class="sub">0 — талая почва, 1 — промёрзла полностью</p>
+          <p class="sub">0 значит талая почва, 1 значит промёрзла полностью</p>
           <svg class="chart" id="chart-th" role="img" aria-labelledby="h-th" height="190"></svg>
         </section>
       </div>
@@ -297,36 +586,92 @@ thead th { position: sticky; top: 0; background: var(--surface-2); font-size: 10
   </div>
   </section>
 
-  <section class="notes" id="data">
+  <section class="notes" id="about">
     <div>
-      <h3>Как считает</h3>
-      <p>Семь уравнений баланса воды, схема Рунге—Кутты 4-го порядка, шаг — полсуток. Лёд в почве уменьшает впитывание: I<sub>max</sub> = I<sub>0</sub>·(1 − θ)<sup>k</sup>.</p>
+      <h3>Как устроено</h3>
+      <p>Модель HBV-Frost, семь уравнений баланса воды и схема Рунге–Кутты 4-го порядка с шагом в сутки. Лёд в почве уменьшает впитывание, поэтому мёрзлая влажная почва отдаёт реке почти всю талую воду. <a href="#math">Уравнения модели</a> ниже.</p>
+      <p>Всё считается в вашем браузере, сервера нет. Погода ERA5 и ERA5-Land через Open-Meteo, те же шесть точек над бассейном, что в работе. Без интернета приложение работает на последних сохранённых данных.</p>
     </div>
     <div>
       <h3>Ограничения</h3>
       <ul>
-        <li>Параметры подобраны по одному паводку (KGE 0,91).</li>
-        <li>Нет льда в русле: пик 2121 м³/с против 2570.</li>
-        <li>Это расчёт «что если», а не прогноз.</li>
+        <li>Модель хорошо отличает большие паводки от малых, но плохо знает величину пика. Рекорд 2017 года не повторяет ни одна модель.</li>
+        <li>Льда в русле в модели нет, пик на ледоходе занижен.</li>
+        <li>Ввод снега и влажности на прошлых годах не проверен.</li>
+        <li>ERA5 выходит с задержкой около шести дней.</li>
+        <li>Пороги риска 20 % и 50 % наши, не официальные.</li>
       </ul>
     </div>
     <div>
-      <h3>Данные</h3>
+      <h3>Данные и метод</h3>
       <ul>
-        <li>Расходы: <a href="https://www.kazhydromet.kz/ru/gidrologiya/basseyn-reki-esil-2002-2024" target="_blank" rel="noopener">кадастр ЕДС-2024</a></li>
-        <li>Погода: <a href="http://www.pogodaiklimat.ru/monitor.php?id=35078&amp;month=4&amp;year=2024" target="_blank" rel="noopener">метеостанция Атбасар</a></li>
-        <li>1 %-я обеспеченность: <a href="https://doi.org/10.3390/hydrology12020035" target="_blank" rel="noopener">Nurbatsina et al., 2025</a></li>
+        <li>Расходы. <a href="https://www.kazhydromet.kz/ru/gidrologiya/basseyn-reki-esil-2002-2024" target="_blank" rel="noopener">Кадастр ЕДС Казгидромета</a>, 2002–2024</li>
+        <li>Погода. <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noopener">ERA5 через Open-Meteo</a></li>
+        <li>Ансамблевый прогноз ESP. <a href="https://doi.org/10.1061/(ASCE)0733-9496(1985)111:2(157)" target="_blank" rel="noopener">Day, 1985</a></li>
       </ul>
     </div>
   </section>
 
+  <details class="math" id="math">
+    <summary>Уравнения модели HBV-Frost</summary>
+    <div class="math-wrap">
+      <p>Семь запасов воды меняются по закону сохранения. Каждое уравнение говорит, что запас меняется на столько, сколько воды пришло, минус сколько ушло.</p>
+      <div class="mscroll"><math display="block"><mtable columnalign="right left" rowspacing="0.7em">
+        <mtr><mtd><mfrac><mrow><mi>d</mi><mi>S</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></mtd><mtd><mo>=</mo><msub><mi>P</mi><mi>s</mi></msub><mo>−</mo><mi>m</mi><mo>+</mo><mi>r</mi></mtd></mtr>
+        <mtr><mtd><mfrac><mrow><mi>d</mi><mi>W</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></mtd><mtd><mo>=</mo><mi>m</mi><mo>+</mo><msub><mi>P</mi><mi>r</mi></msub><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>b</mi><mo stretchy="false">)</mo><mo>−</mo><mi>r</mi><mo>−</mo><mi>ρ</mi></mtd></mtr>
+        <mtr><mtd><mfrac><mrow><mi>d</mi><mi>F</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></mtd><mtd><mo>=</mo><msub><mi>φ</mi><mtext>з</mtext></msub><mo>−</mo><msub><mi>φ</mi><mtext>о</mtext></msub></mtd></mtr>
+        <mtr><mtd><mfrac><mrow><mi>d</mi><mi>M</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></mtd><mtd><mo>=</mo><mi>I</mi><mo>−</mo><mi>R</mi><mo>−</mo><mi>E</mi></mtd></mtr>
+        <mtr><mtd><mfrac><mrow><mi>d</mi><mi>U</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></mtd><mtd><mo>=</mo><mi>R</mi><mo>+</mo><msub><mi>R</mi><mi>s</mi></msub><mo>−</mo><msub><mi>P</mi><mi>c</mi></msub><mo>−</mo><msub><mi>Q</mi><mn>0</mn></msub><mo>−</mo><msub><mi>Q</mi><mn>1</mn></msub></mtd></mtr>
+        <mtr><mtd><mfrac><mrow><mi>d</mi><mi>L</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></mtd><mtd><mo>=</mo><msub><mi>P</mi><mi>c</mi></msub><mo>−</mo><msub><mi>Q</mi><mn>2</mn></msub></mtd></mtr>
+        <mtr><mtd><mfrac><mrow><mi>d</mi><mi>Q</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac></mtd><mtd><mo>=</mo><msub><mi>Q</mi><mn>0</mn></msub><mo>+</mo><msub><mi>Q</mi><mn>1</mn></msub><mo>+</mo><msub><mi>Q</mi><mn>2</mn></msub></mtd></mtr>
+      </mtable></math></div>
+      <p>Главное отличие от обычной HBV в том, как делится вода, пришедшая на почву. Чем больше льда в почве, тем меньше она впитывает.</p>
+      <div class="mscroll"><math display="block"><mtable columnalign="right left" rowspacing="0.7em">
+        <mtr><mtd><mi>θ</mi></mtd><mtd><mo>=</mo><mi>min</mi><mo stretchy="false">(</mo><mfrac><mi>F</mi><mrow><msub><mi>w</mi><mi>F</mi></msub><mspace width="0.17em"></mspace><mi>FC</mi></mrow></mfrac><mo>,</mo><mn>1</mn><mo stretchy="false">)</mo></mtd></mtr>
+        <mtr><mtd><msub><mi>I</mi><mi>max</mi></msub></mtd><mtd><mo>=</mo><msub><mi>I</mi><mn>0</mn></msub><msup><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow><mi>k</mi></msup></mtd></mtr>
+        <mtr><mtd><msub><mi>R</mi><mi>s</mi></msub></mtd><mtd><mo>=</mo><mi>f</mi><mi>V</mi><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>f</mi><mo stretchy="false">)</mo><mi>max</mi><mo stretchy="false">(</mo><mi>V</mi><mo>−</mo><msub><mi>I</mi><mi>max</mi></msub><mo>,</mo><mn>0</mn><mo stretchy="false">)</mo></mtd></mtr>
+        <mtr><mtd><mi>I</mi></mtd><mtd><mo>=</mo><mi>V</mi><mo>−</mo><msub><mi>R</mi><mi>s</mi></msub></mtd></mtr>
+      </mtable></math></div>
+      <p>Систему решаем схемой Рунге–Кутты 4-го порядка с шагом в сутки, а расход реки получаем из стока схемой Маскингум–Кандж. Вероятность большого паводка равна доле вариантов ансамбля ESP, где пик не меньше <span style="white-space:nowrap">500 м³/с</span>.</p>
+      <div class="mscroll"><math display="block"><mi>p</mi><mo>=</mo><mfrac><msub><mi>n</mi><mrow><mo>≥</mo><mn>500</mn></mrow></msub><mi>N</mi></mfrac><mo>,</mo><mspace width="1em"></mspace><mi>N</mi><mo>=</mo><mn>23</mn><mo>×</mo><mn>5</mn><mo>=</mo><mn>115</mn></math></div>
+      <ul>
+        <li>S вода в снеге, W талая вода внутри снега</li>
+        <li>F лёд в почве, M влага почвы</li>
+        <li>U и L верхний и нижний запасы подземной воды</li>
+        <li>Q накопленный сток с водосбора</li>
+        <li>P<sub>s</sub> и P<sub>r</sub> снег и дождь, m таяние, r повторное замерзание</li>
+        <li>ρ вода, вытекающая из снега, b доля земли без снега</li>
+        <li>V вода, пришедшая на почву, R<sub>s</sub> поверхностный сток, I впитывание</li>
+        <li>φ<sub>з</sub> и φ<sub>о</sub> промерзание и оттаивание почвы</li>
+        <li>R подпитка подземных вод, E испарение, P<sub>c</sub> просачивание вниз</li>
+        <li>Q<sub>0</sub>, Q<sub>1</sub>, Q<sub>2</sub> сток из запасов</li>
+        <li>θ доля льда в почве, I<sub>0</sub> впитывание талой почвы за сутки</li>
+        <li>k, f, w<sub>F</sub>, FC параметры, подобранные по данным</li>
+      </ul>
+      <h3 class="math-h">Устойчивость схемы</h3>
+      <p>Самый быстрый процесс в модели это вытекание талой воды из снега, его скорость 2 в сутки, поэтому λ равно −2 1/сут. Схема устойчива, пока множитель за шаг R(λh) по модулю не больше 1. Для схемы Эйлера это шаг до 1 суток, для схемы Рунге–Кутты 4-го порядка до 1,39 суток. Двигайте шаг и смотрите, когда решение начинает расти.</p>
+      <div class="slider lab-slider"><div class="slider-head"><label for="lab-h">Шаг по времени h</label><output id="lab-h-out" for="lab-h"></output></div><input type="range" id="lab-h" min="0.1" max="2" step="0.05" value="1"></div>
+      <div class="duo">
+        <section class="panel" aria-labelledby="h-labr"><h2 id="h-labr">Множитель за шаг |R(z)|</h2><p class="sub">сплошная линия Рунге–Кутта, пунктир Эйлер, кружки на границах</p><svg class="chart" id="lab-r" height="230" role="img"></svg></section>
+        <section class="panel" aria-labelledby="h-laby"><h2 id="h-laby">Решение пробного уравнения <math><msup><mi>y</mi><mo>′</mo></msup><mo>=</mo><mi>λ</mi><mi>y</mi></math></h2><p class="sub">серая линия точное решение, точки по шагам схемы</p><svg class="chart" id="lab-y" height="230" role="img"></svg></section>
+      </div>
+      <p class="why-detail" id="lab-txt"></p>
+      <h3 class="math-h">Параметры пяти блоков</h3>
+      <p>Параметры подобраны отдельно для каждого из пяти блоков перекрёстной проверки, без лет этого блока. Прогноз на весну использует все пять наборов.</p>
+      <div class="tw ptw"><table><thead><tr><th>Параметр</th><th>Единицы</th><th>Блок 1</th><th>Блок 2</th><th>Блок 3</th><th>Блок 4</th><th>Блок 5</th></tr></thead><tbody id="p-tbody"></tbody></table></div>
+    </div>
+  </details>
+
   <footer class="foot">
     <span>Научный проект для РКНП · секция «Прикладная математика»</span>
-    <span>Прототип: не официальный прогноз паводка</span>
+    <span>Прототип, не официальный прогноз Казгидромета</span>
+    <span id="foot-built"></span>
   </footer>
 </div>
 
+<script src="data.js"></script>
 <script>
+
 const DATA = {"dates":["2023-10-01","2023-10-02","2023-10-03","2023-10-04","2023-10-05","2023-10-06","2023-10-07","2023-10-08","2023-10-09","2023-10-10","2023-10-11","2023-10-12","2023-10-13","2023-10-14","2023-10-15","2023-10-16","2023-10-17","2023-10-18","2023-10-19","2023-10-20","2023-10-21","2023-10-22","2023-10-23","2023-10-24","2023-10-25","2023-10-26","2023-10-27","2023-10-28","2023-10-29","2023-10-30","2023-10-31","2023-11-01","2023-11-02","2023-11-03","2023-11-04","2023-11-05","2023-11-06","2023-11-07","2023-11-08","2023-11-09","2023-11-10","2023-11-11","2023-11-12","2023-11-13","2023-11-14","2023-11-15","2023-11-16","2023-11-17","2023-11-18","2023-11-19","2023-11-20","2023-11-21","2023-11-22","2023-11-23","2023-11-24","2023-11-25","2023-11-26","2023-11-27","2023-11-28","2023-11-29","2023-11-30","2023-12-01","2023-12-02","2023-12-03","2023-12-04","2023-12-05","2023-12-06","2023-12-07","2023-12-08","2023-12-09","2023-12-10","2023-12-11","2023-12-12","2023-12-13","2023-12-14","2023-12-15","2023-12-16","2023-12-17","2023-12-18","2023-12-19","2023-12-20","2023-12-21","2023-12-22","2023-12-23","2023-12-24","2023-12-25","2023-12-26","2023-12-27","2023-12-28","2023-12-29","2023-12-30","2023-12-31","2024-01-01","2024-01-02","2024-01-03","2024-01-04","2024-01-05","2024-01-06","2024-01-07","2024-01-08","2024-01-09","2024-01-10","2024-01-11","2024-01-12","2024-01-13","2024-01-14","2024-01-15","2024-01-16","2024-01-17","2024-01-18","2024-01-19","2024-01-20","2024-01-21","2024-01-22","2024-01-23","2024-01-24","2024-01-25","2024-01-26","2024-01-27","2024-01-28","2024-01-29","2024-01-30","2024-01-31","2024-02-01","2024-02-02","2024-02-03","2024-02-04","2024-02-05","2024-02-06","2024-02-07","2024-02-08","2024-02-09","2024-02-10","2024-02-11","2024-02-12","2024-02-13","2024-02-14","2024-02-15","2024-02-16","2024-02-17","2024-02-18","2024-02-19","2024-02-20","2024-02-21","2024-02-22","2024-02-23","2024-02-24","2024-02-25","2024-02-26","2024-02-27","2024-02-28","2024-02-29","2024-03-01","2024-03-02","2024-03-03","2024-03-04","2024-03-05","2024-03-06","2024-03-07","2024-03-08","2024-03-09","2024-03-10","2024-03-11","2024-03-12","2024-03-13","2024-03-14","2024-03-15","2024-03-16","2024-03-17","2024-03-18","2024-03-19","2024-03-20","2024-03-21","2024-03-22","2024-03-23","2024-03-24","2024-03-25","2024-03-26","2024-03-27","2024-03-28","2024-03-29","2024-03-30","2024-03-31","2024-04-01","2024-04-02","2024-04-03","2024-04-04","2024-04-05","2024-04-06","2024-04-07","2024-04-08","2024-04-09","2024-04-10","2024-04-11","2024-04-12","2024-04-13","2024-04-14","2024-04-15","2024-04-16","2024-04-17","2024-04-18","2024-04-19","2024-04-20","2024-04-21","2024-04-22","2024-04-23","2024-04-24","2024-04-25","2024-04-26","2024-04-27","2024-04-28","2024-04-29","2024-04-30","2024-05-01","2024-05-02","2024-05-03","2024-05-04","2024-05-05","2024-05-06","2024-05-07","2024-05-08","2024-05-09","2024-05-10","2024-05-11","2024-05-12","2024-05-13","2024-05-14","2024-05-15","2024-05-16","2024-05-17","2024-05-18","2024-05-19","2024-05-20","2024-05-21","2024-05-22","2024-05-23","2024-05-24","2024-05-25","2024-05-26","2024-05-27","2024-05-28","2024-05-29","2024-05-30","2024-05-31"],"P":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,0.0,0.0,0.0,0.0,0.0,0.7,0.3,0.0,0.0,0.0,0.0,6.0,0.0,8.5,0.0,0.9,4.7,0.8,0.0,2.0,6.0,4.0,0.6,4.0,0.4,0.4,0.0,0.0,0.0,0.0,0.0,7.1,5.0,0.1,4.0,0.0,0.5,0.0,0.7,2.3,10.0,0.0,0.0,0.0,5.0,1.3,3.0,0.2,0.0,0.0,0.0,0.0,1.7,3.0,1.7,7.3,3.0,5.0,1.3,0.0,0.0,0.0,0.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3.0,3.2,2.0,2.5,0.0,0.0,0.0,0.0,2.5,3.0,5.9,3.3,4.2,1.0,2.0,0.2,0.6,0.0,1.1,2.6,4.6,3.0,0.0,2.5,0.0,0.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,4.0,0.9,0.7,0.5,0.3,0.0,0.9,1.1,3.0,1.0,1.3,1.0,0.9,2.5,10.0,1.0,0.0,0.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.7,0.0,0.0,0.0,0.0,0.0,0.0,0.2,0.4,0.3,0.2,0.0,9.0,1.0,0.4,0.5,1.0,0.2,0.4,0.0,0.0,0.0,0.3,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2.5,2.0,0.6,0.7,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.4,0.4,0.8,0.0,0.0,0.6,2.0,0.0,0.3,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,27.0,0.3,15.0,0.0,0.0,0.0,0.0,4.0,0.0,0.6,0.0,0.0,0.0,2.0,2.0,0.0,0.0,0.0,0.0,8.0,2.0,2.0,0.1,4.1,2.0,7.1,2.0,0.4,0.0,0.0,0.3,0.0],"T":[10.6,9.6,7.8,7.4,9.9,9.1,9.9,10.8,13.0,12.6,5.7,4.2,3.6,6.9,6.9,10.2,9.8,9.4,4.4,3.0,3.5,3.8,-0.6,2.3,5.9,-0.3,-3.6,-2.6,0.7,6.9,1.0,1.4,5.5,7.0,6.1,0.9,-1.7,-0.6,2.3,1.0,3.3,5.0,4.9,2.5,2.8,3.0,4.0,4.3,4.8,-8.3,-9.4,-6.4,0.3,-0.2,-4.0,-6.0,-0.3,0.3,2.1,-0.2,-0.6,-4.3,-0.7,-2.5,-10.4,1.4,-7.1,-23.2,-28.8,-29.0,-27.0,-30.6,-30.0,-26.9,-24.4,-19.3,-16.9,-13.0,-5.5,-6.8,-9.6,-0.9,-2.3,-6.6,-7.0,-1.0,-1.4,-1.0,-0.4,-2.2,-5.8,-6.3,0.1,-5.0,-10.9,-8.5,-3.7,-4.1,-1.6,-9.5,-24.7,-13.9,-24.4,-20.0,-7.2,-17.6,-24.7,-26.5,-24.7,-21.0,-17.6,-23.3,-21.7,-18.3,-17.8,-17.4,-12.7,-10.0,-12.7,-14.0,-16.4,-21.8,-23.8,-19.4,-17.1,-6.5,-4.8,-2.3,-2.5,-4.0,-5.6,0.3,-14.4,-22.2,-21.1,-18.0,-10.6,-28.7,-28.9,-27.2,-29.6,-29.1,-27.9,-26.0,-28.0,-28.2,-24.6,-16.4,-8.6,-7.6,-10.0,-13.7,-13.5,-10.3,-13.8,-10.3,-9.7,-12.0,-11.9,-18.4,-9.7,-6.0,-10.5,-13.3,-12.4,-15.6,-12.5,-10.7,-12.3,-13.9,-3.9,-9.0,-12.6,-12.9,-9.2,-10.2,-1.5,-2.4,2.5,2.5,0.8,-3.4,-3.0,-0.5,0.8,-0.9,1.3,3.0,0.6,1.7,4.0,3.3,4.0,1.7,3.7,8.6,10.7,5.6,9.3,11.9,14.3,17.5,17.4,18.4,16.3,13.9,9.0,5.3,7.9,7.9,11.0,16.3,5.6,5.9,7.0,6.5,10.1,4.5,6.6,11.7,12.7,18.6,10.7,8.9,14.3,18.1,11.9,8.8,10.0,13.9,17.2,15.2,11.8,12.0,14.2,13.3,6.5,4.3,10.6,9.5,9.3,16.1,13.4,9.0],"doy":[274,275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152],"obs":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1.2,1.22,1.35,1.49,1.62,1.75,1.88,2.02,2.15,8.29,14.4,20.6,26.7,8.95,34.9,56.8,140.0,255.0,387.0,510.0,746.0,985.0,2570.0,1820.0,1320.0,810.0,839.0,764.0,689.0,614.0,229.0,191.0,222.0,237.0,251.0,159.0,148.0,136.0,125.0,106.0,93.0,79.9,66.9,53.8,40.8,27.7,14.7,14.5,14.1,13.9,13.0,12.6,12.0,11.2,10.3,9.52,8.7,8.67,8.64,8.61,8.58,8.55,8.55,8.55,8.5,8.39,7.87,7.96,7.93,7.9,7.87,7.84,7.81],"lat":51.8,"area":8530.0,"springStart":"2024-03-01","obsStart":"2024-03-20","obsEnd":"2024-05-31","pOn":{"TT":0.45278423181166216,"CFMAX":7.994806948243614,"SFCF":1.4322854033214014,"CWH":0.1,"CFR":0.05,"IMAX0":18.0,"KFROST":3.0,"FFROST":0.22,"WFC":0.3,"DDF":0.02,"SNOWINS":40.0,"FC":180.0,"BETA":2.2,"LP":0.7,"K0":0.9766337677060406,"K1":0.01007407010110592,"K2":0.02,"UZL":28.274520708185662,"PERC":1.2,"MUSK_K":1.723832837977676,"MUSK_X":0.25},"pOff":{"TT":0.45278423181166216,"CFMAX":7.994806948243614,"SFCF":1.4322854033214014,"CWH":0.1,"CFR":0.05,"IMAX0":18.0,"KFROST":0.0,"FFROST":0.0,"WFC":0.3,"DDF":0.02,"SNOWINS":40.0,"FC":180.0,"BETA":2.2,"LP":0.7,"K0":0.9766337677060406,"K1":0.01007407010110592,"K2":0.02,"UZL":28.274520708185662,"PERC":1.2,"MUSK_K":1.723832837977676,"MUSK_X":0.25},"caveat":"Параметры снега и добегания подобраны по одному паводку 2024 года (NSE 0,85, KGE 0,91). Поправка на снег c_s = 1,43: столько воды модели не хватает по данным осадкомера — это недоучёт снега прибором и перенос снега метелями. Параметры промерзания заданы заранее (I₀ = 18 мм/сут, k = 3, f = 0,22, w_F = 0,30): по одному паводку их не определить."};
 
 /* ---------------------------------------------------------------- модель
@@ -703,7 +1048,7 @@ function init() {
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
   new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   render();
-  heroStats(); drawHero();
+  
   let rh = 0;
   addEventListener("resize", () => { cancelAnimationFrame(rh); rh = requestAnimationFrame(drawHero); });
 }
@@ -741,6 +1086,1091 @@ function drawHero() {
     svgEl("circle", { cx: x(i), cy: y(DATA.obs[i]), r: 3.4, fill: css("--surface"), stroke: css("--ink"), "stroke-width": 1.5 }, svg);
 }
 init();
+
+</script>
+<script>
+/* Модель HBV-Frost и ансамблевый прогноз ESP.
+   Точная копия src/torch_hbv.py (rhs_t, simulate_t, make_y0, muskingum_t) и src/esp.py
+   (ensemble_inputs, run). Шаг 1 сутки, схема Рунге—Кутты 4-го порядка. */
+"use strict";
+const ENG = (() => {
+  const K_REL = 2.0, K_THAW = 0.5, T_FRZ = 0.0, DAY = 86400000;
+  const relu = x => (x > 0 ? x : 0);
+  const clip01 = x => (x < 0 ? 0 : x > 1 ? 1 : x);
+
+  function rhs(y, P, T, PET, p, out) {
+    const swe = relu(y[0]), wl = relu(y[1]), f = relu(y[2]), sm = relu(y[3]), suz = relu(y[4]), slz = relu(y[5]);
+    const fs = clip01(0.5 - (T - p.TT));
+    const snow = P * fs * p.SFCF, rain = P * (1 - fs);
+    const melt = Math.min(p.CFMAX * relu(T - p.TT), swe * 2);
+    const refr = Math.min(p.CFR * p.CFMAX * relu(p.TT - T), wl * 2);
+    const rel = K_REL * relu(wl - p.CWH * swe);
+    const bare = 1 - clip01(swe);
+    const water = rel + rain * bare;
+    const fmax = Math.max(p.WFC * p.FC, 1e-6);
+    const insul = Math.exp(-swe / p.SNOWINS);
+    const wsat = clip01(sm / Math.max(p.FC, 1e-6));
+    const room = relu(wsat - f / fmax);
+    const frz = p.DDF * p.FC * relu(T_FRZ - T) * insul * room;
+    const thw = K_THAW * p.DDF * p.FC * relu(T - T_FRZ) * clip01(f / fmax) * insul;
+    const theta = clip01(f / fmax);
+    const imax = p.IMAX0 * Math.pow(Math.max(1 - theta, 1e-6), p.KFROST);
+    const rs = p.FFROST * water + (1 - p.FFROST) * relu(water - imax);
+    const infil = water - rs;
+    const rch = infil * Math.pow(Math.max(clip01(sm / Math.max(p.FC, 1e-6)), 1e-6), p.BETA);
+    const et = Math.min(PET * clip01(sm / Math.max(p.LP * p.FC, 1e-6)), sm * 0.5);
+    const perc = Math.min(p.PERC, suz);
+    const q0 = p.K0 * relu(suz - p.UZL), q1 = p.K1 * suz, q2 = p.K2 * slz;
+    out[0] = snow - melt + refr;
+    out[1] = melt + rain * (1 - bare) - refr - rel;
+    out[2] = frz - thw;
+    out[3] = infil - rch - et;
+    out[4] = rch + rs - perc - q0 - q1;
+    out[5] = perc - q2;
+    out[6] = q0 + q1 + q2;
+  }
+
+  function petOudin(T, doy, latDeg) {
+    const lat = latDeg * Math.PI / 180;
+    const d = 0.409 * Math.sin(2 * Math.PI * doy / 365.25 - 1.39);
+    const ws = Math.acos(Math.max(-1, Math.min(1, -Math.tan(lat) * Math.tan(d))));
+    const dr = 1 + 0.033 * Math.cos(2 * Math.PI * doy / 365.25);
+    const ra = (24 * 60 / Math.PI) * 0.0820 * dr * (ws * Math.sin(lat) * Math.sin(d) + Math.cos(lat) * Math.cos(d) * Math.sin(ws));
+    return Math.max(ra / 2.45 * (T + 5) / 100, 0);
+  }
+
+  const k1 = new Float64Array(7), k2 = new Float64Array(7), k3 = new Float64Array(7), k4 = new Float64Array(7), tmp = new Float64Array(7);
+  function step(y, P, T, PET, p) {           // одни сутки РК-4, затем запасы не меньше нуля
+    rhs(y, P, T, PET, p, k1);
+    for (let i = 0; i < 7; i++) tmp[i] = y[i] + 0.5 * k1[i];
+    rhs(tmp, P, T, PET, p, k2);
+    for (let i = 0; i < 7; i++) tmp[i] = y[i] + 0.5 * k2[i];
+    rhs(tmp, P, T, PET, p, k3);
+    for (let i = 0; i < 7; i++) tmp[i] = y[i] + k3[i];
+    rhs(tmp, P, T, PET, p, k4);
+    for (let i = 0; i < 7; i++) y[i] = y[i] + (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]) / 6;
+    for (let i = 0; i < 6; i++) y[i] = relu(y[i]);
+  }
+
+  let LAT = 51.8, AREA = 8530, CONV = AREA * 1e6 / 1000 / 86400;
+  function setup(lat, area) { LAT = lat; AREA = area; CONV = area * 1e6 / 1000 / 86400; }
+
+  function y0(p, q0) {                         // make_y0: влага 0,6 FC, нижний резервуар по расходу 1 июля
+    const q = (q0 == null || !isFinite(q0)) ? 1.0 : q0;
+    return Float64Array.from([0, 0, 0, 0.6 * p.FC, 0, q / CONV / p.K2, 0]);
+  }
+
+  function route(qmm, p, n) {                  // Маскингум—Кандж, как muskingum_t
+    const K = p.MUSK_K, X = p.MUSK_X, den = 2 * K * (1 - X) + 1;
+    const c0 = (1 - 2 * K * X) / den, c1 = (1 + 2 * K * X) / den, c2 = (2 * K * (1 - X) - 1) / den;
+    const q = new Float64Array(n);
+    q[0] = qmm[0] * CONV;
+    for (let t = 1; t < n; t++) q[t] = relu(c0 * qmm[t] * CONV + c1 * qmm[t - 1] * CONV + c2 * q[t - 1]);
+    return q;
+  }
+
+  // ------------------------------------------------------------ даты
+  const utc = (y, m, d) => Date.UTC(y, m - 1, d);
+  const parse = s => utc(+s.slice(0, 4), +s.slice(5, 7), +s.slice(8, 10));
+  const iso = t => new Date(t).toISOString().slice(0, 10);
+  const doy = t => { const d = new Date(t); return Math.round((t - Date.UTC(d.getUTCFullYear(), 0, 1)) / DAY) + 1; };
+  const hyStart = Y => utc(Y - 1, 7, 1);       // гидрологический год Y: 1 июля Y−1 … 30 июня Y
+  function pos(Y, m, d) {                      // позиция календарной даты внутри года Y (как esp._pos)
+    const yy = m >= 7 ? Y - 1 : Y;
+    if (m === 2 && d === 29 && new Date(utc(yy, 2, 29)).getUTCMonth() !== 1) d = 28;
+    return Math.round((utc(yy, m, d) - hyStart(Y)) / DAY);
+  }
+  function petYear(Y, T) {                     // испаряемость по датам года Y
+    const s = hyStart(Y), out = new Float64Array(T.length);
+    for (let t = 0; t < T.length; t++) out[t] = petOudin(T[t], doy(s + t * DAY), LAT);
+    return out;
+  }
+
+  /* ESP для одного набора параметров.
+     base: {Y, P, T, PET, q0} — фактическая погода года до даты выпуска (индексы < d).
+     donors: [{Y, P, T, PET}] — годы, чья погода подставляется с той же календарной даты.
+     L — длина года (365). mod(t, P, T) — правка погоды донора (сценарий), может быть null.
+     setState(y) — правка состояния на дату выпуска (ввод пользователя), может быть null.
+     Возвращает пики, расходы членов (по желанию) и состояние на дату выпуска. */
+  function esp(base, donors, p, md, opt = {}) {
+    const L = opt.L || 365, Y = base.Y;
+    const d = pos(Y, md[0], md[1]);
+    const w0 = Math.max(d, pos(Y, 3, 1));
+    const y = y0(p, base.q0), qmm0 = new Float64Array(L);
+    for (let t = 0; t < d; t++) { const qb = y[6]; step(y, base.P[t], base.T[t], base.PET[t], p); qmm0[t] = y[6] - qb; }
+    const state = Float64Array.from(y);
+    if (opt.setState) opt.setState(state, p);
+    const peaks = [], peakDay = [], series = opt.keep ? [] : null;
+    const tail = L - d;
+    for (const dn of donors) {
+      const dj = pos(dn.Y, md[0], md[1]);
+      const ys = Float64Array.from(state), qmm = Float64Array.from(qmm0);
+      for (let k = 0; k < tail; k++) {
+        const j = Math.min(dj + k, L - 1), t = d + k;
+        let P = dn.P[j], T = dn.T[j], PET = dn.PET[j];
+        if (opt.mod) { const r = opt.mod(t, P, T, Y); P = r[0]; T = r[1]; PET = r[1] === dn.T[j] ? PET : petOudin(T, doy(hyStart(Y) + t * 86400000), LAT); }
+        const qb = ys[6]; step(ys, P, T, PET, p); qmm[t] = ys[6] - qb;
+      }
+      const q = route(qmm, p, L);
+      let m = -1, im = w0;
+      for (let t = w0; t < L; t++) if (q[t] > m) { m = q[t]; im = t; }
+      peaks.push(m); peakDay.push(im);
+      if (series) series.push(q);
+    }
+    return { peaks, peakDay, series, state, d, w0 };
+  }
+
+  // Состояние модели на позицию d (без ансамбля): для сравнения «сейчас против прошлых лет»
+  function stateAt(P, T, PET, p, q0, d) {
+    const y = y0(p, q0);
+    for (let t = 0; t < d; t++) step(y, P[t], T[t], PET[t], p);
+    return y;
+  }
+
+  function quantile(a, q) {                    // как numpy.quantile (линейная интерполяция)
+    const s = Array.from(a).sort((x, y) => x - y), h = (s.length - 1) * q, lo = Math.floor(h);
+    return lo + 1 < s.length ? s[lo] + (h - lo) * (s[lo + 1] - s[lo]) : s[lo];
+  }
+
+  return { rhs, step, petOudin, y0, route, esp, stateAt, quantile, setup, pos, hyStart, petYear, parse, iso, doy, utc, DAY };
+})();
+
+
+</script>
+<script>
+/* Приложение: прогноз на весну, свои данные, прошлые годы, проверка. Модель — ENG (engine.js), данные — APP (data.js). */
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const F = (x, d = 0) => Number(x).toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const GEN = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+  const SHORT = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+  const dText = t => { const d = new Date(t); return `${d.getUTCDate()} ${GEN[d.getUTCMonth()]}`; };
+  const dShort = t => { const d = new Date(t); return `${d.getUTCDate()} ${SHORT[d.getUTCMonth()]}`; };
+  const pct = p => `${Math.round(100 * p)} %`;
+  const cssv = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const mk = (tag, attrs, parent) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+  const h = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const mean = a => a.reduce((s, x) => s + x, 0) / a.length;
+  const safe = fn => { try { fn(); } catch (e) { console.error(e); } };   // дополнительный блок не должен ломать главный прогноз
+
+  ENG.setup(APP.lat, APP.area);
+  const L = 365, THR = APP.thresh, DAY = ENG.DAY;
+  const MD = { "15 ноября": [11, 15], "1 декабря": [12, 1], "1 января": [1, 1], "1 февраля": [2, 1], "1 марта": [3, 1], "15 марта": [3, 15] };
+  const ISS_SHORT = { "15 ноября": "15 ноя", "1 декабря": "1 дек", "1 января": "1 янв", "1 февраля": "1 фев", "1 марта": "1 мар", "15 марта": "15 мар" };
+  const YEARS = APP.years.map((Y, k) => ({ Y, k, P: APP.P[k], T: APP.T[k], PET: ENG.petYear(Y, APP.T[k]), q0: APP.Q[k][0], Q: APP.Q[k] }));
+  const obsPeak = y => { let m = -1; for (let t = ENG.pos(y.Y, 3, 1); t < L; t++) if (y.Q[t] != null && y.Q[t] > m) m = y.Q[t]; return m; };
+  const PEAKS = YEARS.map(obsPeak);
+  const NBIG = PEAKS.filter(v => v >= THR).length;
+  const CLIM = NBIG / YEARS.length;
+  const LATS = "51.80,51.80,51.80,52.50,52.50,52.50", LONS = "68.35,67.60,69.10,67.60,68.35,69.10";
+
+  /* ------------------------------------------------------------ данные текущего сезона */
+  const KEY = "flood-season-v1";
+  let SEASON = { ...APP.season, src: "snapshot" };
+  try {
+    const c = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (c && c.start === SEASON.start && c.last > SEASON.last && c.P.length === c.T.length) SEASON = { ...c, src: "cache" };
+  } catch (e) { /* хранилище недоступно: работаем на снимке */ }
+  {                               // новый гидрологический год начинается 1 июля: снимок прошлого сезона не используем
+    const now = new Date(), sy = now.getUTCMonth() >= 6 ? now.getUTCFullYear() : now.getUTCFullYear() - 1, st = `${sy}-07-01`;
+    if (st > SEASON.start) SEASON = { start: st, last: ENG.iso(ENG.parse(st) - DAY), P: [], T: [], src: "snapshot" };
+  }
+  const seasonY = () => +SEASON.start.slice(0, 4) + 1;
+
+  async function getJSON(url) {
+    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 20000);
+    try { const r = await fetch(url, { signal: ctl.signal }); if (!r.ok) throw new Error("HTTP " + r.status); return await r.json(); }
+    finally { clearTimeout(tm); }
+  }
+
+  async function refresh(manual) {
+    const st = $("data-status");
+    if (manual) st.textContent = "Загружаю свежую погоду ERA5…";
+    const now = new Date(), today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    // архив принимает конечную дату не позже сегодняшней, берём вчера, при отказе ещё на три дня раньше
+    const load = back => {
+      const base = `https://archive-api.open-meteo.com/v1/archive?latitude=${LATS}&longitude=${LONS}&start_date=${SEASON.start}&end_date=${ENG.iso(today - back * DAY)}&timezone=Asia%2FAlmaty`;
+      return Promise.all([getJSON(base + "&daily=temperature_2m_mean&models=era5_land"), getJSON(base + "&daily=precipitation_sum&models=era5")]);
+    };
+    try {
+      let t, p;
+      try { [t, p] = await load(1); } catch (e) { if (!/HTTP 400/.test(String(e && e.message))) throw e; [t, p] = await load(4); }
+      const dates = t[0].daily.time, T = [], P = [];
+      for (let i = 0; i < Math.min(dates.length, L - 1); i++) {
+        const tv = t.map(o => o.daily.temperature_2m_mean[i]), pv = p.map(o => o.daily.precipitation_sum[i]);
+        if (tv.some(v => v == null) || pv.some(v => v == null)) break;
+        T.push(+mean(tv).toFixed(3)); P.push(+mean(pv).toFixed(3));
+      }
+      const last = dates[T.length - 1];
+      if (T.length && last > SEASON.last) {
+        SEASON = { start: SEASON.start, last, P, T, src: "live" };
+        try { localStorage.setItem(KEY, JSON.stringify(SEASON)); } catch (e) { /* без кэша */ }
+        computeAll();
+      } else if (manual) {
+        st.textContent = `Новых суток пока нет. ERA5 выходит с задержкой около шести дней, последние данные по ${dText(ENG.parse(SEASON.last))}.`;
+      }
+    } catch (e) {
+      if (manual) st.textContent = `Нет связи с Open-Meteo. Показан прогноз по данным до ${dText(ENG.parse(SEASON.last))}.`;
+    }
+  }
+
+  /* ------------------------------------------------------------ расчёты */
+  function seasonBase() {
+    const Y = seasonY();
+    return { Y, P: SEASON.P, T: SEASON.T, PET: ENG.petYear(Y, SEASON.T), q0: APP.q0clim };
+  }
+  function issueOf(base) {
+    const t = ENG.hyStart(base.Y) + base.P.length * DAY, d = new Date(t);
+    return { t, md: [d.getUTCMonth() + 1, d.getUTCDate()] };
+  }
+  const fmaxOf = p => p.WFC * p.FC;
+  function describe(y, p) { return { sm: y[3] / p.FC, snow: y[0] + y[1], theta: Math.min(1, y[2] / fmaxOf(p)) }; }
+
+  function forecast(opt = {}) {
+    const base = seasonBase(), iss = issueOf(base);
+    const donors = opt.donorYear ? YEARS.filter(y => y.Y === opt.donorYear) : YEARS;
+    const series = [], peaks = [], days = [], perSet = [], states = [];
+    let w0 = 0;
+    for (const p of APP.params.frost) {
+      const r = ENG.esp(base, donors, p, iss.md, { keep: true, setState: opt.setState, mod: opt.mod });
+      series.push(...r.series); peaks.push(...r.peaks); days.push(...r.peakDay); w0 = r.w0;
+      perSet.push(r.peaks.filter(x => x >= THR).length / r.peaks.length);
+      states.push(describe(r.state, p));
+    }
+    return { base, iss, series, peaks, days, w0, perSet, states,
+             prob: peaks.filter(x => x >= THR).length / peaks.length,
+             now: { sm: mean(states.map(s => s.sm)), snow: mean(states.map(s => s.snow)), theta: mean(states.map(s => s.theta)) } };
+  }
+
+  function bands(series, from, to) {
+    const q = { q05: [], q25: [], q50: [], q75: [], q95: [] };
+    const col = new Float64Array(series.length);
+    for (let t = 0; t < L; t++) {
+      if (t < from || t > to) { for (const k in q) q[k].push(null); continue; }
+      for (let i = 0; i < series.length; i++) col[i] = series[i][t];
+      const s = Array.from(col).sort((a, b) => a - b), at = f => { const x = (s.length - 1) * f, lo = Math.floor(x); return lo + 1 < s.length ? s[lo] + (x - lo) * (s[lo + 1] - s[lo]) : s[lo]; };
+      q.q05.push(at(0.05)); q.q25.push(at(0.25)); q.q50.push(at(0.5)); q.q75.push(at(0.75)); q.q95.push(at(0.95));
+    }
+    return q;
+  }
+
+  function pastStates(md) {      // состояние модели на ту же дату в 2002–2024, среднее по пяти наборам
+    return YEARS.map(y => {
+      const d = ENG.pos(y.Y, md[0], md[1]);
+      const ds = APP.params.frost.map(p => describe(ENG.stateAt(y.P, y.T, y.PET, p, y.q0, d), p));
+      return { Y: y.Y, sm: mean(ds.map(s => s.sm)), snow: mean(ds.map(s => s.snow)), theta: mean(ds.map(s => s.theta)) };
+    });
+  }
+
+  function winText(t1, t2) {
+    const a = new Date(t1), b = new Date(t2);
+    return a.getUTCMonth() === b.getUTCMonth() ? `${a.getUTCDate()}…${b.getUTCDate()} ${SHORT[a.getUTCMonth()]}` : `${dShort(t1)}…${dShort(t2)}`;
+  }
+  const risk = p => (p >= 0.5 ? "высокий" : p >= 0.2 ? "средний" : "низкий");
+  const plural = (n, a, b, c) => { const m10 = n % 10, m100 = n % 100; return m10 === 1 && m100 !== 11 ? a : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? b : c; };
+  function chanceText(p) {          // вероятность словами: так её легче понять
+    if (p < 0.05) return "меньше 1 шанса из 20";
+    if (p < 0.25) return `примерно 1 шанс из ${Math.round(1 / p)}`;
+    if (p <= 0.9) { const k = Math.round(p * 10); return `примерно ${k} ${plural(k, "шанс", "шанса", "шансов")} из 10`; }
+    return "больше 9 шансов из 10";
+  }
+  const RISK_BINS = [[0, 0.2, "ниже 20 %"], [0.2, 0.5, "от 20 до 50 %"], [0.5, 1.01, "50 % и выше"]];
+  function trackRecord(p, issue) {  // что было в прошлые годы, когда прогноз на ту же дату был в той же полосе риска
+    const bin = RISK_BINS.find(b => p >= b[0] && p < b[1]), rows = APP.hind.frost[issue].filter(r => r.p >= bin[0] && r.p < bin[1]);
+    const big = rows.filter(r => r.obs >= THR);
+    return { bin, n: rows.length, k: big.length, years: big.map(r => r.y) };
+  }
+  function trackText(p, issue) {
+    const t = trackRecord(p, issue);
+    if (!t.n) return "";
+    if (!t.k) return `Когда прогноз от ${issue} в прошлые годы был ${t.bin[2]}, большого паводка не было ни разу, таких лет ${t.n}.`;
+    const ys = t.k <= 3 ? ` (${t.years.join(", ")})` : "";
+    return `Когда прогноз от ${issue} в прошлые годы был ${t.bin[2]}, большой паводок случился в ${t.k} ${t.k === 1 ? "году" : "годах"} из ${t.n}${ys}.`;
+  }
+
+  /* ------------------------------------------------------------ графики */
+  function ticks(max, n = 5) {
+    const raw = max / n, mag = Math.pow(10, Math.floor(Math.log10(raw || 1)));
+    const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw) || raw;
+    const top = Math.ceil(max / step - 1e-9) * step, out = [];
+    for (let v = 0; v <= top + 1e-9; v += step) out.push(+v.toFixed(6));
+    return { ticks: out, top };
+  }
+  function monthLabels(Y, from, to) {
+    const out = [];
+    for (const [m, d] of [[3, 1], [4, 1], [5, 1], [6, 1]]) { const i = ENG.pos(Y, m, d); if (i >= from && i <= to) out.push({ i, text: `1 ${SHORT[m - 1]}` }); }
+    return out;
+  }
+  function plot(svg, cfg) {
+    const W = cfg.W || Math.max(260, svg.clientWidth || svg.parentElement.clientWidth || 600), H = +svg.getAttribute("height");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.replaceChildren();
+    const m = { l: 44, r: 12, t: 12, b: 26 }, a = cfg.from, b = cfg.to;
+    const x = i => m.l + (i - a) / (b - a) * (W - m.l - m.r);
+    let ymax = cfg.minTop || 1;
+    for (const s of cfg.series) for (const v of (s.vs || [s.hi || s.v])) for (let i = a; i <= b; i++) if (v[i] != null && v[i] > ymax) ymax = v[i];
+    if (cfg.ref) ymax = Math.max(ymax, cfg.ref.v * 1.25);
+    if (cfg.cap) ymax = Math.min(ymax, cfg.cap);
+    const nt = ticks(ymax * 1.05, 5), y = v => H - m.b - Math.min(v, nt.top) / nt.top * (H - m.t - m.b);
+    for (const tv of nt.ticks) {
+      mk("line", { x1: m.l, x2: W - m.r, y1: y(tv), y2: y(tv), stroke: cssv(tv === 0 ? "--rule" : "--grid") }, svg);
+      mk("text", { x: m.l - 7, y: y(tv) + 4, "text-anchor": "end", "font-size": 11, fill: cssv("--muted") }, svg).textContent = F(tv);
+    }
+    for (const lb of cfg.xlabels || []) {
+      mk("line", { x1: x(lb.i), x2: x(lb.i), y1: H - m.b, y2: H - m.b + 4, stroke: cssv("--rule") }, svg);
+      mk("text", { x: x(lb.i), y: H - 8, "text-anchor": "middle", "font-size": 11, fill: cssv("--muted") }, svg).textContent = lb.text;
+    }
+    for (const s of cfg.series) {
+      if (s.type === "lines") {
+        const g = mk("g", { fill: "none", stroke: cssv(s.color || "--s-ref"), "stroke-width": s.w || 1, "stroke-opacity": s.op || 0.3, "stroke-linejoin": "round" }, svg);
+        for (const v of s.vs) { let d = ""; for (let i = a; i <= b; i++) d += (i === a ? "M" : "L") + x(i).toFixed(1) + "," + y(v[i]).toFixed(1); mk("path", { d }, g); }
+      } else if (s.type === "band") {
+        let d = ""; for (let i = a; i <= b; i++) d += (i === a ? "M" : "L") + x(i).toFixed(1) + "," + y(s.hi[i]).toFixed(1);
+        for (let i = b; i >= a; i--) d += "L" + x(i).toFixed(1) + "," + y(s.lo[i]).toFixed(1);
+        mk("path", { d: d + "Z", fill: cssv("--ink"), "fill-opacity": s.op || 0.1, stroke: "none" }, svg);
+      } else if (s.type === "dots") {
+        for (let i = a; i <= b; i += s.every || 1) if (s.v[i] != null) mk("circle", { cx: x(i), cy: y(s.v[i]), r: s.r || 2.6, fill: cssv("--surface"), stroke: cssv("--ink"), "stroke-width": 1.4 }, svg);
+      } else {
+        let d = "", pen = false;
+        for (let i = a; i <= b; i++) { if (s.v[i] == null) { pen = false; continue; } d += (pen ? "L" : "M") + x(i).toFixed(1) + "," + y(s.v[i]).toFixed(1); pen = true; }
+        mk("path", { d, fill: "none", stroke: cssv(s.color || "--ink"), "stroke-width": s.w || 2, "stroke-dasharray": s.dash || "none", "stroke-linejoin": "round" }, svg);
+      }
+    }
+    if (cfg.ref) {
+      mk("line", { x1: m.l, x2: W - m.r, y1: y(cfg.ref.v), y2: y(cfg.ref.v), stroke: cssv("--ink-2"), "stroke-dasharray": "4 4" }, svg);
+      mk("text", { x: W - m.r, y: y(cfg.ref.v) - 6, "text-anchor": "end", "font-size": 11, fill: cssv("--ink-2"), stroke: cssv("--surface"), "stroke-width": 4, "paint-order": "stroke" }, svg).textContent = cfg.ref.label;
+    }
+    return { x, y };
+  }
+
+  function legend(box, items) {
+    box.replaceChildren();
+    for (const it of items) {
+      const s = h("span"), k = h("span");
+      if (it.kind === "band") { k.className = "key-band"; k.style.opacity = it.op; }
+      else if (it.kind === "dot") k.className = "dot-key";
+      else if (it.kind === "thin") { k.className = "key-line"; k.style.background = "var(--s-nofrost)"; k.style.opacity = "0.55"; k.style.height = "1px"; }
+      else if (it.kind === "dotted") k.className = "key-line dotted";
+      else if (it.kind === "fdot") k.className = "lg-dot fill";
+      else if (it.kind === "odot") k.className = "lg-dot open";
+      else if (it.kind === "tick") k.className = "lg-tick";
+      else { k.className = "key-line" + (it.dash ? " dash" : ""); if (!it.dash) k.style.background = `var(${it.color || "--ink"})`; }
+      s.append(k, document.createTextNode(it.text)); box.appendChild(s);
+    }
+  }
+
+  function tiles(box, items) {
+    box.replaceChildren();
+    for (const it of items) {
+      const t = h("div", "tile"), v = h("div", "val", it.val);
+      if (it.unit) v.appendChild(h("small", null, it.unit));
+      t.append(h("div", "lbl", it.lbl), v, h("div", it.cls || "ref", it.ref || ""));
+      box.appendChild(t);
+    }
+  }
+
+  function dotplot(svg, values, current, fmt, label) {
+    const W = Math.max(220, svg.clientWidth || 300), H = +svg.getAttribute("height");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.replaceChildren();
+    const lo = Math.min(...values, current), hi = Math.max(...values, current), pad = (hi - lo) * 0.08 || 1;
+    const x = v => 10 + (v - lo + pad) / (hi - lo + 2 * pad) * (W - 20), yc = H / 2 - 4;
+    mk("line", { x1: 10, x2: W - 10, y1: yc, y2: yc, stroke: cssv("--rule") }, svg);
+    for (const v of values) mk("circle", { cx: x(v), cy: yc, r: 4.2, fill: cssv("--s-ref"), "fill-opacity": 0.7 }, svg);
+    mk("line", { x1: x(current), x2: x(current), y1: yc - 13, y2: yc + 13, stroke: cssv("--ink"), "stroke-width": 3 }, svg);
+    mk("text", { x: 10, y: H - 3, "font-size": 10.5, fill: cssv("--muted") }, svg).textContent = fmt(lo);
+    mk("text", { x: W - 10, y: H - 3, "font-size": 10.5, fill: cssv("--muted"), "text-anchor": "end" }, svg).textContent = fmt(hi);
+    svg.setAttribute("aria-label", label);
+  }
+
+  /* ------------------------------------------------------------ прогноз */
+  let FC = null, PAST = null;
+  function renderForecast() {
+    const f = FC, Y = f.base.Y, from = ENG.pos(Y, 3, 1), to = L - 1;
+    const q = bands(f.series, from, to);
+    const lo = ENG.quantile(f.peaks, 0.1), md = ENG.quantile(f.peaks, 0.5), hi = ENG.quantile(f.peaks, 0.9);
+    const dlo = ENG.quantile(f.days, 0.1), dhi = ENG.quantile(f.days, 0.9);
+    const day = i => ENG.hyStart(Y) + Math.round(i) * DAY;
+    const pmin = Math.min(...f.perSet), pmax = Math.max(...f.perSet);
+    const issueTxt = dText(f.iss.t), lastTxt = dText(ENG.parse(SEASON.last));
+    const src = { snapshot: "снимок данных в приложении", cache: "сохранённые свежие данные", live: "свежие данные Open-Meteo" }[SEASON.src];
+
+    $("hero-prob").textContent = pct(f.prob);
+    $("hero-risk").textContent = `Риск ${risk(f.prob)}, ${chanceText(f.prob)}. В обычный год ${pct(CLIM)}, большие паводки были в ${NBIG} из ${YEARS.length} лет.`;
+    $("hero-track").textContent = trackText(f.prob, nearestIssue(f.iss.md));
+    const nb = f.peaks.filter(v => v >= THR).length;
+    $("es-1").textContent = SEASON.P.length ? `Погода ERA5 с ${dText(ENG.parse(SEASON.start))} по ${lastTxt}` : "Сезон только начался, погоды пока нет";
+    $("es-2").textContent = `Влага почвы ${F(100 * f.now.sm)} %, снег ${F(f.now.snow)} мм, лёд θ ${F(f.now.theta, 2)}`;
+    $("es-3").textContent = `Зима и весна как в каждом из ${YEARS.length} лет, ${APP.params.frost.length} наборов параметров`;
+    $("es-4").textContent = `${nb} ${plural(nb, "вариант", "варианта", "вариантов")} из ${f.peaks.length} ${nb === 1 ? "даёт" : "дают"} пик от 500 м³/⁠с, это ${pct(f.prob)}`;
+    $("hero-meta").textContent = `Прогноз выпущен ${issueTxt}. Погода ERA5 по ${lastTxt}, ${src}.`;
+    $("hero-spring").textContent = `${Y}`;
+    $("data-status").textContent = `Погода по ${lastTxt}. ERA5 выходит с задержкой около шести дней, новые сутки появляются каждый день.`;
+    const win = winText(day(dlo), day(dhi));
+    const rows = [["Пик, медиана", `${F(md)} м³/с`], ["Пик в 8 из 10 вариантов", `от ${F(lo)} до ${F(hi)}`], ["Когда пик", win]];
+    const box = $("hero-stats"); box.replaceChildren();
+    for (const [n, v] of rows) { const r = h("div", "hv-row"); r.append(h("span", null, n), h("b", null, v)); box.appendChild(r); }
+
+    tiles($("f-tiles"), [
+      { lbl: "Вероятность пика от 500 м³/с", val: pct(f.prob), ref: `по пяти наборам параметров от ${pct(pmin)} до ${pct(pmax)}` },
+      { lbl: "Обычная вероятность", val: pct(CLIM), ref: `${NBIG} больших паводков за ${YEARS.length} лет` },
+      { lbl: "Уровень риска", val: risk(f.prob), ref: "до 20 % низкий, до 50 % средний, выше высокий" },
+      { lbl: "Пик, медиана", val: F(md), unit: "м³/с", ref: `обычный год 276 м³/с` },
+      { lbl: "Пик в 80 % вариантов", val: `${F(lo)}…${F(hi)}`, unit: "м³/с", ref: "10-й и 90-й процентили" },
+      { lbl: "Когда пик", val: win, ref: "в 80 % вариантов" },
+    ]);
+
+    const xl = monthLabels(Y, from, to);
+    const capF = Math.max(900, 1.5 * hi), series = [{ type: "lines", vs: f.series, op: 0.2, color: "--s-nofrost" }, { type: "line", v: q.q50, w: 2.4 }];
+    plot($("f-chart"), { from, to, series, xlabels: xl, ref: { v: THR, label: "большой паводок, 500 м³/с" }, minTop: 900, cap: capF });
+    legend($("f-legend"), [{ kind: "thin", text: `каждый из ${f.series.length} вариантов` }, { kind: "line", text: "медиана по дням" }]);
+    plot($("hero-fan"), { from, to, series, xlabels: xl, ref: { v: THR, label: "500 м³/с" }, minTop: 900, cap: capF });
+
+    // что модель видит сейчас
+    if (!PAST || PAST.key !== f.iss.t) PAST = { key: f.iss.t, rows: pastStates(f.iss.md) };
+    const P = PAST.rows, rank = (k, v) => P.filter(r => r[k] < v).length;
+    const st = [
+      { id: "s-sm", k: "sm", v: f.now.sm, name: "Влажность почвы", fmt: v => `${F(100 * v)} %`, more: "от наибольшего запаса в модели" },
+      { id: "s-snow", k: "snow", v: f.now.snow, name: "Вода в снеге", fmt: v => `${F(v)} мм`, more: "" },
+      { id: "s-th", k: "theta", v: f.now.theta, name: "Лёд в почве θ", fmt: v => F(v, 2), more: "0 талая, 1 промёрзла" },
+    ];
+    for (const s of st) {
+      $(s.id + "-val").textContent = s.fmt(s.v);
+      const r = rank(s.k, s.v);
+      const cmp = r === 0 ? `Меньше, чем в любом из ${P.length} лет на ту же дату.` : r === P.length ? `Больше, чем в любом из ${P.length} лет на ту же дату.` : `Больше, чем в ${r} ${r === 1 ? "году" : "годах"} из ${P.length} на ту же дату.`;
+      $(s.id + "-txt").textContent = `${s.more ? s.more + ". " : ""}${cmp}`;
+      dotplot($(s.id + "-plot"), P.map(x => x[s.k]), s.v, s.fmt, `${s.name} сейчас ${s.fmt(s.v)}, серые точки за 2002–2024 годы`);
+    }
+    // кнопки влажности: самый сухой год, середина и осень перед паводком 2024 года на ту же дату
+    const bySm = P.slice().sort((x, y) => x.sm - y.sm), smLo = bySm[0], smMid = bySm[(bySm.length - 1) >> 1], sm24 = P.find(r => r.Y === 2024);
+    const hy = Y => `${Y - 1}/${String(Y % 100).padStart(2, "0")}`;
+    const chip = (id, r, txt) => { const b = $(id); if (!b || !r) return; const v = Math.round(100 * r.sm); b.dataset.uset = `sm:${v}`; b.textContent = `${txt}, ${v} %`; };
+    chip("u-sm-dry", smLo, `сухо, как в ${hy(smLo.Y)}`); chip("u-sm-mid", smMid, "обычно"); chip("u-sm-2024", sm24, `как в ${hy(2024)}`);
+    safe(() => renderWhy(f)); safe(() => renderWeather(f)); safe(() => renderAutumn(f, P)); safe(() => scheduleEvo(f)); safe(() => scheduleAlarm(f));
+    // качество прогноза с этой даты
+    const sc = (m, i) => APP.scores.find(r => r.model === m && r.issue === i);
+    const near = nearestIssue(f.iss.md);
+    const a = sc("frost", near), b = sc("nofrost", near), c = sc("frost", "1 марта");
+    $("f-skill").textContent = `Насколько этому верить. Мы проверили прогноз с даты ${near} на всех 23 годах. Модель с мёрзлой почвой различала большие и малые паводки с AUC ${F(a.auc, 2)}, та же модель без мёрзлой почвы ${F(b.auc, 2)}, угадывание дало бы 0,5. ${trackText(f.prob, near)} К 1 марта, когда снег уже лежит, AUC ${F(c.auc, 2)}. Точный пик модель не знает и рекорды занижает.`;
+    renderInput();
+  }
+
+  function nearestIssue(md) {     // ближайшая проверенная дата выпуска не позже сегодняшней
+    const order = ["15 ноября", "1 декабря", "1 января", "1 февраля", "1 марта", "15 марта"];
+    const key = ([m, d]) => (m >= 7 ? m - 7 : m + 5) * 40 + d;
+    let best = order[0];
+    for (const i of order) if (key(MD[i]) <= key(md)) best = i;
+    return best;
+  }
+
+  /* ------------------------------------------------------------ почему такой прогноз */
+  const LOGT = [20, 50, 100, 200, 500, 1000, 2000, 5000];
+  const rankRu = (r, n, more, less, tail = "") => r === 0 ? `${less}, чем в любом из ${n} лет${tail}.` : r === n ? `${more}, чем в любом из ${n} лет${tail}.` : `${more}, чем в ${r} ${r === 1 ? "году" : "годах"} из ${n}${tail}.`;
+  const yearsRu = ys => ys.length < 2 ? ys.join("") : `${ys.slice(0, -1).join(", ")} или ${ys[ys.length - 1]}`;
+  function logGrid(svg, W, H, m, lo, hi) {
+    const la = Math.log10(lo), lb = Math.log10(hi), y = v => H - m.b - (Math.log10(Math.max(v, lo)) - la) / (lb - la) * (H - m.t - m.b);
+    for (const tv of LOGT) if (tv >= lo && tv <= hi) {
+      mk("line", { x1: m.l, x2: W - m.r, y1: y(tv), y2: y(tv), stroke: cssv("--grid") }, svg);
+      mk("text", { x: m.l - 7, y: y(tv) + 4, "text-anchor": "end", "font-size": 11, fill: cssv("--muted") }, svg).textContent = F(tv);
+    }
+    return y;
+  }
+  function refLine(svg, W, m, yv, label) {
+    mk("line", { x1: m.l, x2: W - m.r, y1: yv, y2: yv, stroke: cssv("--ink-2"), "stroke-dasharray": "4 4" }, svg);
+    mk("text", { x: W - m.r, y: yv - 6, "text-anchor": "end", "font-size": 11, fill: cssv("--ink-2"), stroke: cssv("--surface"), "stroke-width": 4, "paint-order": "stroke" }, svg).textContent = label;
+  }
+  function donorTable(f) {        // пики прогноза по годам погоды: пять наборов параметров на каждый год
+    const n = YEARS.length, ns = APP.params.frost.length;
+    const by = YEARS.map((y, j) => ({ Y: y.Y, j, pk: [], day: [] }));
+    for (let s = 0; s < ns; s++) for (let j = 0; j < n; j++) { by[j].pk.push(f.peaks[s * n + j]); by[j].day.push(f.days[s * n + j]); }
+    const near = nearestIssue(f.iss.md), act = {};
+    for (const r of APP.hind.frost[near]) act[r.y] = r.act;
+    for (const c of by) { c.med = ENG.quantile(c.pk, 0.5); c.nbig = c.pk.filter(v => v >= THR).length; c.act = act[c.Y]; c.obs = PEAKS[c.j]; }
+    return { by, near };
+  }
+  function whyExample(by, prob) {  // год, на котором лучше всего видно влияние этой осени
+    if (prob <= CLIM) {
+      const c = by.filter(c => c.obs >= THR && c.act >= THR && c.med < THR).sort((a, b) => b.act / b.med - a.act / a.med)[0];
+      return c ? { c, down: true } : null;
+    }
+    const c = by.filter(c => c.obs < THR && c.act < THR && c.med >= THR).sort((a, b) => b.med / b.act - a.med / a.act)[0];
+    return c ? { c, down: false } : null;
+  }
+  let WSEL = null;
+  function renderWhy(f) {
+    const { by } = donorTable(f), n = by.length, ns = APP.params.frost.length;
+    const cols = by.slice().sort((a, b) => b.med - a.med), ex = whyExample(by, f.prob);
+    if (WSEL == null || !by.some(c => c.Y === WSEL)) WSEL = ex ? ex.c.Y : cols[0].Y;
+    const svg = $("w-chart");
+    drawWhy(svg, Math.max(300, svg.clientWidth || 600), f, by, cols, true);
+    legend($("w-legend"), [{ kind: "fdot", text: "пик от 500 м³/с" }, { kind: "odot", text: "меньше 500" }, { kind: "tick", text: "та же зима и весна с осенью того года" }]);
+    whyText(f, by, ex);
+  }
+  function drawWhy(svg, W, f, by, cols, interactive) {
+    const n = by.length, ns = APP.params.frost.length, H = +svg.getAttribute("height");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.replaceChildren();
+    const m = { l: 44, r: 10, t: 14, b: 34 };
+    const all = f.peaks.concat(by.map(c => c.act).filter(v => v != null));
+    const lo = Math.max(10, Math.min(50, Math.min(...all) / 1.3)), hi = Math.max(2000, Math.max(...all) * 1.15);
+    const y = logGrid(svg, W, H, m, lo, hi), cw = (W - m.l - m.r) / n;
+    refLine(svg, W, m, y(THR), "500 м³/с");
+    cols.forEach((c, i) => {
+      const x0 = m.l + cw * i, cx = x0 + cw / 2, sel = interactive && c.Y === WSEL;
+      const g = interactive ? mk("g", { class: "col", tabindex: sel ? 0 : -1, role: "button", "aria-pressed": String(sel), "aria-label": `Зима и весна как в ${c.Y} году, больших паводков ${c.nbig} из ${ns}` }, svg) : mk("g", {}, svg);
+      mk("rect", { x: x0 + 0.5, y: m.t, width: Math.max(1, cw - 1), height: H - m.t - m.b, fill: sel ? cssv("--surface-2") : "#FFFFFF", "fill-opacity": sel ? 1 : 0, stroke: "none" }, g);
+      if (c.act != null) mk("line", { x1: cx - Math.min(7, cw * 0.42), x2: cx + Math.min(7, cw * 0.42), y1: y(c.act), y2: y(c.act), stroke: cssv("--ink-2"), "stroke-width": 2.2 }, g);
+      c.pk.forEach((v, s) => {
+        const big = v >= THR, dx = (s - (ns - 1) / 2) * Math.min(2.4, cw * 0.11);
+        mk("circle", { cx: cx + dx, cy: y(v), r: cw < 16 ? 3 : 3.6, fill: big ? cssv("--ink") : cssv("--surface"), stroke: big ? cssv("--ink") : cssv("--s-nofrost"), "stroke-width": 1.2 }, g);
+      });
+      if (cw >= 17 || sel || i % 2 === 0) mk("text", { x: cx, y: H - 12, "text-anchor": "middle", "font-size": cw < 17 ? 9.5 : 10.5, "font-weight": sel ? 700 : 400, fill: cssv(sel ? "--ink" : "--muted") }, g).textContent = String(c.Y % 100).padStart(2, "0");
+      if (!interactive) return;
+      const pick = yy => { WSEL = yy; renderWhy(FC); const el = $("w-chart").querySelector(`[data-y="${yy}"]`); if (el) el.focus(); };
+      g.dataset.y = c.Y;
+      g.addEventListener("click", () => pick(c.Y));
+      g.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(c.Y); }
+        else if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); const k = Math.max(0, Math.min(cols.length - 1, i + (e.key === "ArrowRight" ? 1 : -1))); pick(cols[k].Y); }
+      });
+    });
+    mk("text", { x: W - m.r, y: H - 1, "text-anchor": "end", "font-size": 10, fill: cssv("--muted") }, svg).textContent = "год, чья зима и весна подставлена, 20xx";
+  }
+  function whyText(f, by, ex) {
+    const n = by.length, ns = APP.params.frost.length;
+    const c = by.find(z => z.Y === WSEL), mn = Math.min(...c.pk), mx = Math.max(...c.pk);
+    let det = `Зима и весна как в ${c.Y} году. Пики от ${F(mn)} до ${F(mx)} м³/с, большой паводок в ${c.nbig} из ${ns} вариантов.`;
+    if (c.act != null) det += ` С осенью того года модель давала ${F(c.act)} м³/с, а в жизни было ${F(c.obs)}.`;
+    $("w-detail").textContent = det;
+    const nb = f.peaks.filter(v => v >= THR).length, bigYears = by.filter(z => z.nbig > 0).sort((a, b) => b.nbig - a.nbig || b.med - a.med).map(z => z.Y);
+    let sum = nb === 0 ? `Ни один из ${f.peaks.length} вариантов не даёт большого паводка.`
+      : bigYears.length > 8 ? `Большой паводок получается в ${nb} вариантах из ${f.peaks.length}, при зиме и весне как в ${bigYears.length} годах из ${n}.`
+      : `Большой паводок получается в ${nb} вариантах из ${f.peaks.length}. Для этого зима и весна должны быть как в ${yearsRu(bigYears)} году.`;
+    if (ex) {
+      const e = ex.c;
+      sum += ex.down
+        ? ` Пример влияния осени. Зима и весна ${e.Y} года принесли паводок ${F(e.obs)} м³/с. С осенью того года модель давала ${F(e.act)}, а с этой осенью та же зима и весна дали бы около ${F(e.med)}.`
+        : ` Пример влияния осени. Зима и весна ${e.Y} года большого паводка не дали, ${F(e.obs)} м³/с. С этой осенью та же зима и весна дали бы около ${F(e.med)}.`;
+    }
+    $("w-sum").textContent = sum;
+  }
+
+  /* ------------------------------------------------------------ погода сезона */
+  function renderWeather(f) {
+    const md = f.iss.md, d = SEASON.P.length, n = YEARS.length, ends = YEARS.map(y => ENG.pos(y.Y, md[0], md[1]));
+    if (!d) { for (const id of ["s-p", "s-t"]) { $(id + "-val").textContent = "нет данных"; $(id + "-txt").textContent = ""; $(id + "-plot").replaceChildren(); } return; }
+    const pCur = SEASON.P.reduce((s, v) => s + v, 0), pPast = YEARS.map((y, k) => y.P.slice(0, ends[k]).reduce((s, v) => s + v, 0));
+    const w = Math.min(30, d), tCur = mean(SEASON.T.slice(d - w)), tPast = YEARS.map((y, k) => mean(y.T.slice(Math.max(0, ends[k] - w), ends[k])));
+    const fmtP = v => `${F(v)} мм`, fmtT = v => `${v > 0 ? "+" : v < 0 ? "−" : ""}${F(Math.abs(v), 1)} °C`;
+    $("s-p-val").textContent = fmtP(pCur);
+    $("s-p-txt").textContent = rankRu(pPast.filter(v => v < pCur).length, n, "Больше", "Меньше", " за то же время");
+    dotplot($("s-p-plot"), pPast, pCur, fmtP, `Осадки с 1 июля ${fmtP(pCur)}, серые точки за 2002–2024 годы`);
+    $("s-t-val").textContent = fmtT(tCur);
+    $("s-t-txt").textContent = rankRu(tPast.filter(v => v < tCur).length, n, "Теплее", "Холоднее", " в те же дни");
+    dotplot($("s-t-plot"), tPast, tCur, fmtT, `Средняя температура ${fmtT(tCur)}, серые точки за 2002–2024 годы`);
+  }
+
+  /* ------------------------------------------------------------ влажная осень, большой паводок */
+  function spearman(a, b) {
+    const rk = v => { const o = v.map((x, i) => [x, i]).sort((p, q) => p[0] - q[0]), r = new Array(v.length); let i = 0;
+      while (i < o.length) { let j = i; while (j + 1 < o.length && o[j + 1][0] === o[i][0]) j++; for (let k = i; k <= j; k++) r[o[k][1]] = (i + j) / 2 + 1; i = j + 1; } return r; };
+    const ra = rk(a), rb = rk(b), ma = mean(ra), mb = mean(rb);
+    let num = 0, da = 0, db = 0; for (let i = 0; i < ra.length; i++) { num += (ra[i] - ma) * (rb[i] - mb); da += (ra[i] - ma) ** 2; db += (rb[i] - mb) ** 2; }
+    return num / Math.sqrt(da * db);
+  }
+  function renderAutumn(f, P) {
+    const svg = $("a-chart"), W = Math.max(280, svg.clientWidth || 500), H = +svg.getAttribute("height");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.replaceChildren();
+    const m = { l: 44, r: 14, t: 22, b: 30 }, xs = P.map(r => 100 * r.sm), ys = PEAKS, cur = 100 * f.now.sm;
+    const xlo = Math.floor(Math.min(...xs, cur) / 5) * 5, xhi = Math.ceil(Math.max(...xs, cur) / 5) * 5;
+    const x = v => m.l + (v - xlo) / (xhi - xlo) * (W - m.l - m.r);
+    const y = logGrid(svg, W, H, m, Math.max(10, Math.min(50, Math.min(...ys) / 1.4)), Math.max(2000, Math.max(...ys) * 1.3));
+    const step = xhi - xlo > 30 ? 10 : 5;
+    for (let v = xlo; v <= xhi + 1e-9; v += step) {
+      mk("line", { x1: x(v), x2: x(v), y1: H - m.b, y2: H - m.b + 4, stroke: cssv("--rule") }, svg);
+      mk("text", { x: x(v), y: H - 9, "text-anchor": "middle", "font-size": 11, fill: cssv("--muted") }, svg).textContent = `${F(v)} %`;
+    }
+    refLine(svg, W, m, y(THR), "500 м³/с");
+    mk("line", { x1: x(cur), x2: x(cur), y1: m.t - 6, y2: H - m.b, stroke: cssv("--ink"), "stroke-width": 2 }, svg);
+    const right = x(cur) > W * 0.6;
+    mk("text", { x: x(cur) + (right ? -6 : 6), y: m.t + 4, "text-anchor": right ? "end" : "start", "font-size": 11.5, "font-weight": 700, fill: cssv("--ink"), stroke: cssv("--surface"), "stroke-width": 4, "paint-order": "stroke" }, svg).textContent = `сейчас ${F(cur)} %`;
+    xs.forEach((v, k) => {
+      const big = ys[k] >= THR;
+      mk("circle", { cx: x(v), cy: y(ys[k]), r: 4.6, fill: big ? cssv("--ink") : cssv("--surface"), stroke: big ? cssv("--ink") : cssv("--s-nofrost"), "stroke-width": 1.3 }, svg);
+      mk("text", { x: x(v) + 6, y: y(ys[k]) + 3.5, "font-size": 9.5, fill: cssv("--muted") }, svg).textContent = String(P[k].Y % 100).padStart(2, "0");
+    });
+    const rho = spearman(xs, ys);
+    const near = P.map((r, k) => ({ Y: r.Y, d: Math.abs(xs[k] - cur), pk: ys[k] })).sort((a, b) => a.d - b.d).slice(0, 5);
+    const nb = near.filter(z => z.pk >= THR).length, pks = near.map(z => z.pk);
+    const nbTxt = nb === 0 ? "Большого паводка не было ни в одном из них" : nb === near.length ? "Большой паводок был во всех" : `Большой паводок был в ${nb} из них`;
+    $("a-txt").textContent = `Ранговая связь Спирмена ${F(rho, 2)}. Самая похожая влажность на эту дату была в ${yearsRu(near.map(z => z.Y)).replace(" или ", " и ")} годах. ${nbTxt}, пики от ${F(Math.min(...pks))} до ${F(Math.max(...pks))} м³/с. Влажность здесь расчётная, по погоде ERA5, измерений почвы у нас нет.`;
+    svg.setAttribute("aria-label", `Влажность почвы осенью и пик весной за 2002–2024 годы, сейчас ${F(cur)} %`);
+  }
+
+  /* ------------------------------------------------------------ как менялся прогноз */
+  let EVO = null, evoTimer = 0, evoKey = "";
+  function scheduleEvo(f) {
+    const key = `${SEASON.start}|${SEASON.last}|${SEASON.P.length}`;
+    if (EVO && EVO.key === key) { drawEvo(f); return; }
+    if (evoKey === key) return;       // уже считается
+    evoKey = key; clearTimeout(evoTimer);
+    const Y = f.base.Y, start = ENG.utc(Y - 1, 9, 1), endT = f.iss.t, dates = [];
+    for (let t = start; t < endT - 3 * DAY; t += 7 * DAY) dates.push(t);
+    if (!dates.length) { $("e-txt").textContent = "Линия появится с сентября, когда наберётся погода сезона."; $("e-chart").replaceChildren(); EVO = { key, pts: [] }; return; }
+    const pts = []; let i = 0;
+    $("e-txt").textContent = "Считаю…";
+    const step = () => {
+      if (evoKey !== key) return;
+      const t = dates[i], d = new Date(t), md = [d.getUTCMonth() + 1, d.getUTCDate()];
+      let big = 0, nn = 0;
+      for (const p of APP.params.frost) { const r = ENG.esp(f.base, YEARS, p, md, {}); big += r.peaks.filter(v => v >= THR).length; nn += r.peaks.length; }
+      pts.push({ t, p: big / nn }); i++;
+      if (i < dates.length) evoTimer = setTimeout(step, 0);
+      else { pts.push({ t: endT, p: f.prob }); EVO = { key, pts }; if (FC) drawEvo(FC); }
+    };
+    evoTimer = setTimeout(step, 60);
+  }
+  function drawEvo(f) {
+    const pts = EVO.pts, svg = $("e-chart"); if (!pts.length) return;
+    const W = Math.max(280, svg.clientWidth || 500), H = +svg.getAttribute("height");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.replaceChildren();
+    const m = { l: 40, r: 40, t: 14, b: 30 }, t0 = pts[0].t, t1 = pts[pts.length - 1].t;
+    const x = t => m.l + (t - t0) / Math.max(DAY, t1 - t0) * (W - m.l - m.r), y = p => H - m.b - p * (H - m.t - m.b);
+    for (const v of [0, 0.25, 0.5, 0.75, 1]) {
+      mk("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: cssv(v === 0 ? "--rule" : "--grid") }, svg);
+      mk("text", { x: m.l - 7, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: cssv("--muted") }, svg).textContent = `${v * 100} %`;
+    }
+    const d0 = new Date(t0);
+    for (let k = 0; k < 13; k++) {
+      const t = Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth() + k, 1); if (t < t0 || t > t1) continue;
+      mk("line", { x1: x(t), x2: x(t), y1: H - m.b, y2: H - m.b + 4, stroke: cssv("--rule") }, svg);
+      mk("text", { x: x(t), y: H - 9, "text-anchor": "middle", "font-size": 11, fill: cssv("--muted") }, svg).textContent = `1 ${SHORT[new Date(t).getUTCMonth()]}`;
+    }
+    const tv = Date.UTC(new Date(t1).getUTCFullYear() - (new Date(t1).getUTCMonth() >= 6 ? 0 : 1), 10, 15);
+    if (tv > t0 && tv <= t1) {
+      mk("line", { x1: x(tv), x2: x(tv), y1: m.t, y2: H - m.b, stroke: cssv("--ink-2"), "stroke-dasharray": "2 3" }, svg);
+      mk("text", { x: x(tv) - 5, y: m.t + 10, "text-anchor": "end", "font-size": 10.5, fill: cssv("--ink-2"), stroke: cssv("--surface"), "stroke-width": 4, "paint-order": "stroke" }, svg).textContent = "проверено с 15 ноября";
+    }
+    mk("line", { x1: m.l, x2: W - m.r, y1: y(CLIM), y2: y(CLIM), stroke: cssv("--s-nofrost"), "stroke-dasharray": "6 4" }, svg);
+    mk("text", { x: m.l + 4, y: y(CLIM) - 6, "font-size": 11, fill: cssv("--s-nofrost"), stroke: cssv("--surface"), "stroke-width": 4, "paint-order": "stroke" }, svg).textContent = `обычно ${pct(CLIM)}`;
+    let dd = ""; pts.forEach((p, k) => { dd += (k ? "L" : "M") + x(p.t).toFixed(1) + "," + y(p.p).toFixed(1); });
+    mk("path", { d: dd, fill: "none", stroke: cssv("--ink"), "stroke-width": 2.2, "stroke-linejoin": "round" }, svg);
+    pts.forEach((p, k) => mk("circle", { cx: x(p.t), cy: y(p.p), r: k === pts.length - 1 ? 4.5 : 3, fill: cssv("--ink") }, svg));
+    const lp = pts[pts.length - 1];
+    mk("text", { x: x(lp.t) + 7, y: y(lp.p) + 4, "font-size": 12, "font-weight": 700, fill: cssv("--ink") }, svg).textContent = pct(lp.p);
+    const ps = pts.map(p => p.p);
+    $("e-txt").textContent = `С ${dText(t0)} по ${dText(t1)} вероятность была от ${pct(Math.min(...ps))} до ${pct(Math.max(...ps))}, сейчас ${pct(lp.p)}. Прогнозы раньше 15 ноября на прошлых годах не проверены, эта часть линии только для наглядности.`;
+    svg.setAttribute("aria-label", `Вероятность большого паводка по дням выпуска с ${dText(t0)} по ${dText(t1)}`);
+  }
+
+  /* ------------------------------------------------------------ печать, таблица, ссылка */
+  function buildBulletin() {        // одна страница A4: то, что нужно для печати или PDF
+    const f = FC; if (!f || !PAST) return;
+    const b = $("bulletin"); b.replaceChildren();
+    const Y = f.base.Y, lastT = ENG.parse(SEASON.last), yr = t => new Date(t).getUTCFullYear();
+    const lo = ENG.quantile(f.peaks, 0.1), md = ENG.quantile(f.peaks, 0.5), hi = ENG.quantile(f.peaks, 0.9);
+    const dlo = ENG.quantile(f.days, 0.1), dhi = ENG.quantile(f.days, 0.9), day = i => ENG.hyStart(Y) + Math.round(i) * DAY;
+    const head = h("div", "b-head"), ht = h("div"), qr = h("img", "b-qr");
+    ht.append(h("p", "b-title", "Прогноз весеннего половодья, р. Жабай у г. Атбасар"),
+      h("p", "b-meta", `Выпуск ${dText(f.iss.t)} ${yr(f.iss.t)} года. Погода ERA5 по ${dText(lastT)} ${yr(lastT)} года. Напечатано ${new Date().toLocaleDateString("ru-RU")}.`));
+    qr.src = "qr_flood.png"; qr.alt = "QR-код сайта debonoff.github.io/Flood";
+    head.append(ht, qr);
+    const main = h("div", "b-main");
+    main.append(h("span", "b-num", pct(f.prob)), h("span", "b-cap", `вероятность большого паводка весной ${Y} года, пик от 500 м³/с у Атбасара. Риск ${risk(f.prob)}, ${chanceText(f.prob)}, в обычный год ${pct(CLIM)}. ${trackText(f.prob, nearestIssue(f.iss.md))}`));
+    const P = PAST.rows, rk = (k, v) => P.filter(r => r[k] < v).length, tb = h("table"), tr1 = h("tr"), tr2 = h("tr");
+    const cell = (tr, k, v) => { const td = h("td"); td.append(h("b", null, v), document.createTextNode(k)); tr.appendChild(td); };
+    cell(tr1, "пик, медиана вариантов", `${F(md)} м³/с`);
+    cell(tr1, "пик в 8 из 10 вариантов", `${F(lo)}…${F(hi)} м³/с`);
+    cell(tr1, "когда пик в 8 из 10 вариантов", winText(day(dlo), day(dhi)));
+    cell(tr2, "вероятность по пяти наборам параметров", `${pct(Math.min(...f.perSet))}…${pct(Math.max(...f.perSet))}`);
+    cell(tr2, `влажность почвы в модели, больше, чем в ${rk("sm", f.now.sm)} годах из ${P.length}`, `${F(100 * f.now.sm)} %`);
+    cell(tr2, `вода в снеге, больше, чем в ${rk("snow", f.now.snow)} годах из ${P.length}`, `${F(f.now.snow)} мм`);
+    tb.append(tr1, tr2);
+    const from = ENG.pos(Y, 3, 1), to = L - 1, q = bands(f.series, from, to);
+    const s1 = mk("svg", { height: 200, role: "img", "aria-label": "Варианты расхода воды весной" });
+    plot(s1, { W: 700, from, to, series: [{ type: "lines", vs: f.series, op: 0.2, color: "--s-nofrost" }, { type: "line", v: q.q50, w: 2.2 }], xlabels: monthLabels(Y, from, to), ref: { v: THR, label: "500 м³/с" }, minTop: 900, cap: Math.max(900, 1.5 * hi) });
+    const { by } = donorTable(f), s2 = mk("svg", { height: 180, role: "img", "aria-label": "Пики вариантов по годам погоды" });
+    drawWhy(s2, 700, f, by, by.slice().sort((a, c) => c.med - a.med), false);
+    const sc = (m, i) => APP.scores.find(r => r.model === m && r.issue === i), near = nearestIssue(f.iss.md);
+    b.append(head, main, tb,
+      h("h3", null, "Расход воды у Атбасара весной, 115 вариантов, м³/с"), s1,
+      h("h3", null, "Почему такой прогноз"), h("p", null, $("w-sum").textContent + (ALARM && ALARM.m != null ? " " + $("u-alarm-txt").textContent : "")), s2,
+      h("p", "b-note", "Чёрные точки дают пик от 500 м³/с, светлые меньше, черта показывает ту же зиму и весну с осенью того года."),
+      h("h3", null, "Насколько этому верить"),
+      h("p", null, `Прогноз с даты ${near} проверен на всех 23 годах 2002–2024. Модель с мёрзлой почвой различала большие и малые паводки с AUC ${F(sc("frost", near).auc, 2)}, без мёрзлой почвы ${F(sc("nofrost", near).auc, 2)}, угадывание дало бы 0,5. Точнее простой нормы вероятности пока не доказаны, 23 лет мало. Величину пика модель знает хуже и рекорды занижает.`),
+      h("p", "b-foot", "Модель HBV-Frost, семь уравнений баланса воды, схема Рунге–Кутты 4-го порядка. Ансамбль ESP, погода 23 прошлых лет и пять наборов параметров. Погода ERA5 и ERA5-Land через Open-Meteo, расходы из кадастра ЕДС Казгидромета за 2002–2024 годы. Прототип научного проекта, не официальный прогноз Казгидромета. debonoff.github.io/Flood"));
+  }
+  function downloadCSV() {
+    if (!FC) return;
+    const n = YEARS.length, rows = [["погода_зимы_и_весны_как_в_году", "набор_параметров", "пик_м3_с", "дата_пика", "большой_паводок"]];
+    FC.peaks.forEach((v, i) => {
+      const s = Math.floor(i / n), j = i % n, t = ENG.hyStart(FC.base.Y) + FC.days[i] * DAY;
+      rows.push([YEARS[j].Y, s + 1, v.toFixed(1).replace(".", ","), ENG.iso(t), v >= THR ? "да" : "нет"]);
+    });
+    const blob = new Blob(["﻿" + rows.map(r => r.join(";")).join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const a = h("a"); a.href = URL.createObjectURL(blob); a.download = `zhabay-prognoz-${ENG.iso(FC.iss.t)}.csv`;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  async function share() {
+    const url = location.origin + location.pathname, st = $("data-status");
+    const text = FC ? `Вероятность большого паводка на Жабае весной ${FC.base.Y} года ${pct(FC.prob)}, прогноз по модели HBV-Frost.` : "Прогноз паводка на Жабае";
+    try {
+      if (navigator.share) { await navigator.share({ title: document.title, text, url }); return; }
+      await navigator.clipboard.writeText(url); st.textContent = "Ссылка скопирована.";
+    } catch (e) { if (e && e.name !== "AbortError") st.textContent = `Ссылка ${url}`; }
+  }
+
+  /* ------------------------------------------------------------ порог тревоги */
+  let ALARM = null, alarmKey = "", alarmTimer = 0;
+  function probWinter(f, mult) {   // вероятность, если осадки до конца февраля умножить на mult
+    const mar1 = ENG.pos(f.base.Y, 3, 1), mod = (t, P, T) => [t < mar1 ? P * mult : P, T];
+    let b = 0, n = 0;
+    for (const p of APP.params.frost) { const r = ENG.esp(f.base, YEARS, p, f.iss.md, { mod }); b += r.peaks.filter(v => v >= THR).length; n += r.peaks.length; }
+    return b / n;
+  }
+  function scheduleAlarm(f) {
+    const key = `${SEASON.start}|${SEASON.last}|${SEASON.P.length}`;
+    if (ALARM && ALARM.key === key) { drawAlarm(); return; }
+    if (alarmKey === key) return;
+    alarmKey = key; clearTimeout(alarmTimer);
+    const up = f.prob < 0.5;          // ищем множитель, при котором вероятность переходит через 50 %
+    let lo = up ? 1 : 0.3, hi = up ? 3 : 1, it = 0;
+    const done = m => { ALARM = { key, up, m }; drawAlarm(); };
+    const step = () => {
+      if (alarmKey !== key) return;
+      if (it === 0) {
+        const edge = probWinter(f, up ? hi : lo);
+        if (up && edge < 0.5) return done(null);
+        if (!up && edge >= 0.5) return done(null);
+      } else {
+        const mid = (lo + hi) / 2;
+        if (probWinter(f, mid) >= 0.5) hi = mid; else lo = mid;
+      }
+      if (++it <= 7) alarmTimer = setTimeout(step, 0); else done(up ? hi : lo);
+    };
+    alarmTimer = setTimeout(step, 120);
+  }
+  function drawAlarm() {
+    const a = ALARM, box = $("u-alarm-txt"), btn = $("u-alarm-btn");
+    if (!a) return;
+    if (a.m == null) {
+      box.textContent = a.up ? "Даже если снега и осадков до конца февраля выпадет втрое больше, чем в прошлые годы, шансы большого паводка при этой осени останутся ниже 50 %."
+        : "Даже при очень сухой зиме шансы большого паводка при этой осени останутся не ниже 50 %.";
+      btn.hidden = true; return;
+    }
+    const m = Math.round(a.m * 10) / 10;
+    box.textContent = a.up ? `При этой осени шансы большого паводка станут 50 на 50, если снега и осадков до конца февраля выпадет примерно в ${F(m, 1)} раза больше, чем в прошлые годы.`
+      : `Шансы большого паводка упадут ниже 50 %, только если снега и осадков до конца февраля будет не больше ${F(m, 1)} от прошлых лет.`;
+    btn.hidden = m < 0.5 || m > 2;
+    btn.dataset.m = m;
+  }
+
+  /* ------------------------------------------------------------ устойчивость схемы */
+  const LAM = -2;                   // самый быстрый процесс модели, вытекание талой воды из снега, 2 в сутки
+  const R4 = z => 1 + z + z * z / 2 + z ** 3 / 6 + z ** 4 / 24, R1 = z => 1 + z;
+  function renderLab() {
+    const hs = +$("lab-h").value, z = LAM * hs;
+    $("lab-h-out").textContent = `${F(hs, 2)} сут`;
+    {                               // множитель за шаг |R(z)|
+      const svg = $("lab-r"), W = Math.max(260, svg.clientWidth || 420), H = +svg.getAttribute("height");
+      svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.replaceChildren();
+      const m = { l: 34, r: 12, t: 14, b: 28 }, zl = -3.6, yh = 2;
+      const x = v => m.l + (v - zl) / (0 - zl) * (W - m.l - m.r), y = v => H - m.b - Math.min(v, yh) / yh * (H - m.t - m.b);
+      for (const v of [0, 1, 2]) {
+        mk("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: cssv(v === 1 ? "--ink-2" : "--grid"), "stroke-dasharray": v === 1 ? "4 4" : "none" }, svg);
+        mk("text", { x: m.l - 6, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: cssv("--muted") }, svg).textContent = F(v);
+      }
+      for (const v of [-3, -2, -1, 0]) mk("text", { x: x(v), y: H - 9, "text-anchor": "middle", "font-size": 11, fill: cssv("--muted") }, svg).textContent = v < 0 ? `−${-v}` : "0";
+      const path = fn => { let d = ""; for (let i = 0; i <= 180; i++) { const zz = zl + (0 - zl) * i / 180; d += (i ? "L" : "M") + x(zz).toFixed(1) + "," + y(Math.abs(fn(zz))).toFixed(1); } return d; };
+      mk("path", { d: path(R1), fill: "none", stroke: cssv("--s-nofrost"), "stroke-width": 1.6, "stroke-dasharray": "6 4" }, svg);
+      mk("path", { d: path(R4), fill: "none", stroke: cssv("--ink"), "stroke-width": 2.2 }, svg);
+      for (const [zz, lab] of [[-2, "−2"], [-2.785, "−2,785"]]) {
+        mk("circle", { cx: x(zz), cy: y(1), r: 3.5, fill: cssv("--surface"), stroke: cssv("--ink"), "stroke-width": 1.4 }, svg);
+        mk("text", { x: x(zz), y: y(1) + 16, "text-anchor": "middle", "font-size": 10.5, fill: cssv("--ink-2"), stroke: cssv("--surface"), "stroke-width": 4, "paint-order": "stroke" }, svg).textContent = lab;
+      }
+      if (z >= zl) {
+        mk("line", { x1: x(z), x2: x(z), y1: m.t, y2: H - m.b, stroke: cssv("--ink"), "stroke-width": 1.5 }, svg);
+        mk("circle", { cx: x(z), cy: y(Math.abs(R4(z))), r: 4.5, fill: cssv("--ink") }, svg);
+        mk("circle", { cx: x(z), cy: y(Math.abs(R1(z))), r: 4, fill: cssv("--surface"), stroke: cssv("--s-nofrost"), "stroke-width": 1.6 }, svg);
+      }
+      svg.setAttribute("aria-label", "Множитель за шаг для схем Эйлера и Рунге–Кутты 4-го порядка");
+    }
+    {                               // решение y' λy с этим шагом
+      const svg = $("lab-y"), W = Math.max(260, svg.clientWidth || 420), H = +svg.getAttribute("height");
+      svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.replaceChildren();
+      const m = { l: 34, r: 12, t: 14, b: 28 }, T = 8, ylim = 1.25;
+      const x = t => m.l + t / T * (W - m.l - m.r), y = v => H - m.b - (Math.max(-ylim, Math.min(ylim, v)) + ylim) / (2 * ylim) * (H - m.t - m.b);
+      for (const v of [-1, 0, 1]) {
+        mk("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: cssv(v === 0 ? "--rule" : "--grid") }, svg);
+        mk("text", { x: m.l - 6, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: cssv("--muted") }, svg).textContent = v < 0 ? "−1" : F(v);
+      }
+      for (const t of [0, 2, 4, 6, 8]) mk("text", { x: x(t), y: H - 9, "text-anchor": "middle", "font-size": 11, fill: cssv("--muted") }, svg).textContent = `${t} сут`;
+      let d = ""; for (let i = 0; i <= 160; i++) { const t = T * i / 160; d += (i ? "L" : "M") + x(t).toFixed(1) + "," + y(Math.exp(LAM * t)).toFixed(1); }
+      mk("path", { d, fill: "none", stroke: cssv("--s-ref"), "stroke-width": 2 }, svg);
+      for (const [fn, st] of [[R1, { fill: cssv("--surface"), stroke: cssv("--s-nofrost"), dash: "6 4" }], [R4, { fill: cssv("--ink"), stroke: cssv("--ink"), dash: "none" }]]) {
+        let v = 1, dd = "", n = 0;
+        for (let t = 0; t <= T + 1e-9; t += hs, n++) {
+          dd += (n ? "L" : "M") + x(t).toFixed(1) + "," + y(v).toFixed(1);
+          mk("circle", { cx: x(t), cy: y(v), r: 3.2, fill: st.fill, stroke: st.stroke, "stroke-width": 1.4 }, svg);
+          v *= fn(z);
+        }
+        mk("path", { d: dd, fill: "none", stroke: st.stroke, "stroke-width": 1.3, "stroke-dasharray": st.dash }, svg);
+      }
+      svg.setAttribute("aria-label", "Решение пробного уравнения с выбранным шагом");
+    }
+    const r4 = R4(z), r1 = R1(z);
+    const verdict = r => Math.abs(Math.abs(r) - 1) < 0.005 ? "это граница устойчивости, колебания не затухают" : Math.abs(r) < 1 ? "по модулю меньше 1, схема устойчива" : "по модулю больше 1, решение растёт без предела";
+    $("lab-txt").textContent = `При шаге ${F(hs, 2)} сут произведение λh равно ${F(z, 2).replace("-", "−")}. За один шаг схема Рунге–Кутты умножает решение на ${F(r4, 2).replace("-", "−")}, ${verdict(r4)}. Метод Эйлера умножает на ${F(r1, 2).replace("-", "−")}, ${verdict(r1)}. В модели шаг 1 сутки, это меньше границы 1,39 суток.`;
+  }
+
+  /* ------------------------------------------------------------ параметры пяти блоков */
+  const PNAMES = [["TT", "порог снега и дождя", "°C"], ["CFMAX", "скорость таяния снега", "мм/(°C·сут)"], ["SFCF", "поправка на недоучёт снега", ""], ["CWH", "вода, которую держит снег", "доля"],
+    ["CFR", "повторное замерзание", ""], ["IMAX0", "впитывание талой почвы, I<sub>0</sub>", "мм/сут"], ["KFROST", "влияние льда на впитывание, k", ""], ["FFROST", "сток прямо по мёрзлой почве, f", "доля"],
+    ["WFC", "наибольшая доля льда, w<sub>F</sub>", "доля FC"], ["DDF", "скорость промерзания", "1/(°C·сут)"], ["SNOWINS", "утепление почвы снегом", "мм"], ["FC", "наибольший запас влаги почвы, FC", "мм"],
+    ["BETA", "нелинейность подпитки, β", ""], ["LP", "порог испарения", "доля FC"], ["K0", "быстрый сток, K<sub>0</sub>", "1/сут"], ["K1", "сток верхнего запаса, K<sub>1</sub>", "1/сут"],
+    ["K2", "сток нижнего запаса, K<sub>2</sub>", "1/сут"], ["UZL", "порог быстрого стока", "мм"], ["PERC", "просачивание вниз", "мм/сут"], ["MUSK_K", "время добегания по руслу", "сут"], ["MUSK_X", "сглаживание волны", ""]];
+  function renderParams() {
+    const tb = $("p-tbody"); tb.replaceChildren();
+    const num = v => Number(v.toPrecision(3)).toLocaleString("ru-RU", { maximumFractionDigits: 4 });
+    for (const [k, name, unit] of PNAMES) {
+      const tr = h("tr"), td = h("td"); td.innerHTML = name; tr.append(td, h("td", null, unit));
+      for (const p of APP.params.frost) tr.appendChild(h("td", null, num(p[k])));
+      tb.appendChild(tr);
+    }
+  }
+
+  /* ------------------------------------------------------------ установка как приложение */
+  let installEvt = null;
+  addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; $("btn-install").hidden = false; });
+  addEventListener("appinstalled", () => { $("btn-install").hidden = true; });
+
+  function downloadHindCSV() {
+    const names = { frost: "HBV-Frost", nofrost: "без мёрзлой почвы", precip: "осадки зимы, без модели" };
+    const rows = [["год", "дата_выпуска", "модель", "вероятность_большого_паводка", "наблюдённый_пик_м3_с", "большой_паводок_был"]];
+    for (const mdl of ["frost", "nofrost", "precip"]) for (const iss of APP.issues) for (const r of APP.hind[mdl][iss])
+      rows.push([r.y, iss, names[mdl], String(r.p).replace(".", ","), String(r.obs).replace(".", ","), r.obs >= THR ? "да" : "нет"]);
+    const blob = new Blob(["﻿" + rows.map(r => r.join(";")).join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const a = h("a"); a.href = URL.createObjectURL(blob); a.download = "zhabay-retroprognoz-2002-2024.csv";
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+
+  /* ------------------------------------------------------------ свои данные */
+  const U = { snow: null, sm: null, winter: 1, spring: 0, donor: 0 };
+  function renderInput() {
+    if (!FC) return;
+    const f = FC, Y = f.base.Y, from = ENG.pos(Y, 3, 1), to = L - 1, mar1 = from, jun1 = ENG.pos(Y, 6, 1);
+    if (U.snow == null) $("u-snow").placeholder = F(f.now.snow);
+    if (U.sm == null) $("u-sm").placeholder = F(100 * f.now.sm);
+    $("u-snow-ref").textContent = `модель считает ${F(f.now.snow)} мм`;
+    $("u-sm-ref").textContent = `модель считает ${F(100 * f.now.sm)} %. Это расчётная величина, измерения с ней сравнимы только примерно.`;
+    $("uo-winter").textContent = `×${F(U.winter, 1)}`;
+    $("uo-spring").textContent = `${U.spring > 0 ? "+" : U.spring < 0 ? "−" : ""}${F(Math.abs(U.spring), 1)} °C`;
+    const changed = U.snow != null || U.sm != null || U.winter !== 1 || U.spring !== 0 || U.donor;
+    const setState = (U.snow != null || U.sm != null) ? (s, p) => {
+      if (U.snow != null) { const tot = s[0] + s[1]; if (tot > 0.01) { s[0] *= U.snow / tot; s[1] *= U.snow / tot; } else { s[0] = U.snow; s[1] = 0; } }
+      if (U.sm != null) { const nw = p.FC * U.sm / 100; if (s[3] > 0.01) s[2] = Math.min(fmaxOf(p), s[2] * nw / s[3]); s[3] = nw; }
+    } : null;
+    const mod = (U.winter !== 1 || U.spring !== 0) ? (t, P, T) => [t < mar1 ? P * U.winter : P, (t >= mar1 && t < jun1) ? T + U.spring : T] : null;
+    const g = changed ? forecast({ setState, mod, donorYear: U.donor || null }) : f;
+    const q = bands(g.series, from, to), qb = bands(f.series, from, to);
+    const md = ENG.quantile(g.peaks, 0.5), lo = ENG.quantile(g.peaks, 0.1), hi = ENG.quantile(g.peaks, 0.9);
+    const dp = Math.round(100 * (g.prob - f.prob));
+    tiles($("u-tiles"), [
+      { lbl: U.donor ? `Пик выше 500 м³/с` : "Вероятность пика от 500 м³/с", val: U.donor ? `${g.peaks.filter(x => x >= THR).length} из 5` : pct(g.prob), cls: changed && dp ? "delta" : "ref", ref: changed ? (U.donor ? `наборов параметров, погода как в ${U.donor}` : `${dp > 0 ? "+" : dp < 0 ? "−" : ""}${Math.abs(dp)} п. к прогнозу без ввода`) : "без ввода совпадает с прогнозом выше" },
+      { lbl: "Пик, медиана", val: F(md), unit: "м³/с", ref: `без ввода ${F(ENG.quantile(f.peaks, 0.5))}` },
+      { lbl: "Пик в 80 % вариантов", val: `${F(lo)}…${F(hi)}`, unit: "м³/с", ref: "10-й и 90-й процентили" },
+    ]);
+    const tl = $("u-tiles").firstChild.lastChild; if (changed && dp) tl.dataset.dir = dp > 0 ? "up" : "down";
+    const series = [{ type: "lines", vs: g.series, op: g.series.length > 40 ? 0.2 : 0.55, color: "--s-nofrost" }, { type: "line", v: q.q50, w: 2.4 }];
+    if (changed) series.push({ type: "line", v: qb.q50, color: "--s-nofrost", dash: "6 4", w: 1.6 });
+    plot($("u-chart"), { from, to, series, xlabels: monthLabels(Y, from, to), ref: { v: THR, label: "500 м³/с" }, minTop: 900, cap: Math.max(900, 1.5 * hi) });
+    legend($("u-legend"), [{ kind: "thin", text: "варианты, ваш ввод" }, { kind: "line", text: "медиана по дням" }].concat(changed ? [{ kind: "line", dash: true, text: "медиана без ввода" }] : []));
+  }
+
+  function bindInput() {
+    const num = (id, key, lo, hi) => {
+      $(id).addEventListener("input", () => { const s = $(id).value.trim().replace(",", "."); const v = +s; U[key] = s === "" || !isFinite(v) ? null : Math.max(lo, Math.min(hi, v)); schedule(); });
+    };
+    num("u-snow", "snow", 0, 400); num("u-sm", "sm", 0, 100);
+    $("u-winter").addEventListener("input", e => { U.winter = +e.target.value; schedule(); });
+    $("u-spring").addEventListener("input", e => { U.spring = +e.target.value; schedule(); });
+    const sel = $("u-donor");
+    for (const y of YEARS) { const o = h("option", null, `как в ${y.Y} году`); o.value = y.Y; sel.appendChild(o); }
+    sel.addEventListener("change", () => { U.donor = +sel.value; schedule(); });
+    $("u-reset").addEventListener("click", () => {
+      Object.assign(U, { snow: null, sm: null, winter: 1, spring: 0, donor: 0 });
+      $("u-snow").value = ""; $("u-sm").value = ""; $("u-winter").value = 1; $("u-spring").value = 0; sel.value = 0; renderInput();
+    });
+    for (const btn of document.querySelectorAll("[data-uset]")) btn.addEventListener("click", () => {
+      const [k, v] = btn.dataset.uset.split(":");
+      if (k === "winter") { U.winter = +v; $("u-winter").value = v; }
+      if (k === "spring") { U.spring = +v; $("u-spring").value = v; }
+      if (k === "sm") { U.sm = +v; $("u-sm").value = v; }
+      if (k === "snow") { U.snow = +v; $("u-snow").value = v; }
+      renderInput();
+    });
+  }
+  let tmr = 0;
+  const schedule = () => { clearTimeout(tmr); tmr = setTimeout(renderInput, 120); };
+
+  /* ------------------------------------------------------------ прошлые годы */
+  const H = { k: YEARS.length - 1, iss: "1 марта", off: false };
+  function renderPast() {
+    const y = YEARS[H.k], md = MD[H.iss], fi = APP.fold[H.k] - 1;
+    const donors = [y, ...YEARS.filter(z => z !== y)];
+    const rf = ENG.esp(y, donors, APP.params.frost[fi], md, { keep: true });
+    const ref = APP.hind.frost[H.iss][H.k], refOff = APP.hind.nofrost[H.iss][H.k];
+    const from = ENG.pos(y.Y, 3, 1), to = L - 1, q = bands(rf.series.slice(1), from, to);
+    const big = ref.obs >= THR;
+    const series = [{ type: "lines", vs: rf.series.slice(1), op: 0.32, color: "--s-nofrost" }, { type: "line", v: q.q50, w: 2.4 }];
+    if (H.off) {
+      const ro = ENG.esp(y, donors, APP.params.nofrost[fi], md, { keep: true });
+      series.push({ type: "line", v: bands(ro.series.slice(1), from, to).q50, color: "--s-nofrost", dash: "6 4", w: 1.8 });
+    }
+    series.push({ type: "line", v: Array.from(rf.series[0]), color: "--ink-2", dash: "2 3", w: 1.4 });
+    series.push({ type: "dots", v: y.Q, r: 2.3 });
+    const top = Math.max(900, ref.obs * 1.08, ref.q90 * 1.1);
+    plot($("h-chart"), { from, to, series, xlabels: monthLabels(y.Y, from, to), ref: { v: THR, label: "500 м³/с" }, minTop: top, cap: Math.max(top, 3400) });
+    legend($("h-legend"), [{ kind: "dot", text: "наблюдение Казгидромета" }, { kind: "thin", text: "22 варианта прогноза" }, { kind: "line", text: "медиана по дням" }]
+      .concat(H.off ? [{ kind: "line", dash: true, text: "медиана без мёрзлой почвы" }] : []).concat([{ kind: "dotted", text: "если бы весну знали заранее" }]));
+    const folds = APP.years.filter((_, j) => APP.fold[j] === fi + 1);
+    tiles($("h-tiles"), [
+      { lbl: `Вероятность большого паводка на ${H.iss}`, val: pct(ref.p), ref: H.off ? `без мёрзлой почвы ${pct(refOff.p)}` : `обычная ${pct(ref.pc)}` },
+      { lbl: "Что было", val: F(ref.obs), unit: "м³/с", ref: big ? "большой паводок" : "большого паводка не было" },
+      { lbl: "Прогноз пика, медиана", val: F(ref.med), unit: "м³/с", ref: `в 80 % вариантов от ${F(ref.q10)} до ${F(ref.q90)}` },
+    ]);
+    const hit = (ref.p >= 0.5) === big;
+    safe(() => drawYearIssues(y, big));
+    $("h-verdict").textContent = `${y.Y} год, прогноз на ${H.iss}. Модель дала ${pct(ref.p)}, ${big ? "большой паводок был" : "большого паводка не было"} (${F(ref.obs)} м³/с). ${hit ? (big ? "Тревога была верной." : "Модель верно не подняла тревогу.") : (big ? "Модель паводок недооценила." : "Это ложная тревога.")}`;
+    $("h-note").textContent = `Параметры модели для этого года подобраны на других годах, без лет с ${folds[0]} по ${folds[folds.length - 1]}. Погода ${y.Y} года после даты выпуска в прогноз не входит. Вероятность и медиана совпадают с таблицами работы.`;
+    for (const b of document.querySelectorAll("#h-issues button")) b.setAttribute("aria-pressed", String(b.dataset.iss === H.iss));
+  }
+  function drawYearIssues(y, big) {   // как менялся прогноз для выбранного года по шести датам выпуска
+    const svg = $("h-iss"), W = Math.max(280, svg.clientWidth || 600), Hh = +svg.getAttribute("height");
+    svg.setAttribute("viewBox", `0 0 ${W} ${Hh}`); svg.replaceChildren();
+    const iss = APP.issues, m = { l: 44, r: 16, t: 26, b: 28 }, n = iss.length, ins = 24;
+    const x = i => m.l + ins + i * (W - m.l - m.r - 2 * ins) / (n - 1), yy = v => Hh - m.b - v * (Hh - m.t - m.b);
+    for (const v of [0, 0.5, 1]) {
+      mk("line", { x1: m.l, x2: W - m.r, y1: yy(v), y2: yy(v), stroke: cssv(v === 0.5 ? "--ink-2" : "--grid"), "stroke-dasharray": v === 0.5 ? "4 4" : "none" }, svg);
+      mk("text", { x: m.l - 6, y: yy(v) + 4, "text-anchor": "end", "font-size": 11, fill: cssv("--muted") }, svg).textContent = `${100 * v} %`;
+    }
+    iss.forEach((s, i) => mk("text", { x: x(i), y: Hh - 9, "text-anchor": "middle", "font-size": 11, "font-weight": s === H.iss ? 700 : 400, fill: cssv(s === H.iss ? "--ink" : "--muted") }, svg).textContent = ISS_SHORT[s]);
+    for (const [mdl, st] of [["nofrost", { c: "--s-nofrost", dash: "6 4", fill: "--surface" }], ["frost", { c: "--ink", dash: "none", fill: "--ink" }]]) {
+      const v = iss.map(s => APP.hind[mdl][s][H.k].p);
+      mk("path", { d: v.map((a, i) => (i ? "L" : "M") + x(i).toFixed(1) + "," + yy(a).toFixed(1)).join(""), fill: "none", stroke: cssv(st.c), "stroke-width": mdl === "frost" ? 2.2 : 1.6, "stroke-dasharray": st.dash }, svg);
+      v.forEach((a, i) => {
+        const g = mk("g", { class: "col", tabindex: mdl === "frost" ? 0 : -1, role: "button", "aria-label": `${y.Y} год, прогноз на ${iss[i]}, ${pct(a)}` }, svg);
+        mk("circle", { cx: x(i), cy: yy(a), r: iss[i] === H.iss && mdl === "frost" ? 5.5 : 4, fill: cssv(st.fill), stroke: cssv(st.c), "stroke-width": 1.6 }, g);
+        if (mdl === "frost") {
+          mk("text", { x: x(i), y: yy(a) - 9, "text-anchor": "middle", "font-size": 10.5, fill: cssv("--ink"), stroke: cssv("--surface"), "stroke-width": 4, "paint-order": "stroke" }, g).textContent = pct(a);
+          const go = () => { H.iss = iss[i]; renderPast(); };
+          g.addEventListener("click", go);
+          g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+        }
+      });
+    }
+    $("h-iss-sub").textContent = `${y.Y} год, ${big ? "большой паводок был" : "большого паводка не было"}. Сплошная линия модель с мёрзлой почвой, пунктир без неё. Нажмите на точку, чтобы открыть прогноз на эту дату.`;
+  }
+  function bindPast() {
+    const sel = $("h-year");
+    YEARS.forEach((y, k) => { const o = h("option", null, `${y.Y}${PEAKS[k] >= THR ? ", большой паводок" : ""}`); o.value = k; sel.appendChild(o); });
+    sel.value = H.k;
+    sel.addEventListener("change", () => { H.k = +sel.value; renderPast(); });
+    const box = $("h-issues");
+    for (const iss of APP.issues) { const b = h("button", null, iss); b.type = "button"; b.dataset.iss = iss; b.addEventListener("click", () => { H.iss = iss; renderPast(); }); box.appendChild(b); }
+    $("h-off").addEventListener("change", e => { H.off = e.target.checked; renderPast(); });
+    const go = dk => { H.k = (H.k + dk + YEARS.length) % YEARS.length; sel.value = H.k; renderPast(); };
+    $("h-prev").addEventListener("click", () => go(-1));
+    $("h-next").addEventListener("click", () => go(1));
+  }
+
+  /* ------------------------------------------------------------ проверка */
+  const C = { iss: "1 марта" };
+  function renderCheck() {
+    // AUC по датам выпуска
+    const svg = $("c-auc"), W = Math.max(280, svg.clientWidth || 600), Hh = +svg.getAttribute("height");
+    svg.setAttribute("viewBox", `0 0 ${W} ${Hh}`); svg.replaceChildren();
+    const m = { l: 40, r: 14, t: 14, b: 28 }, iss = APP.issues, n = iss.length;
+    const x = i => m.l + (i + 0.5) / n * (W - m.l - m.r), y = v => Hh - m.b - (v - 0.3) / 0.7 * (Hh - m.t - m.b);
+    for (const v of [0.3, 0.5, 0.7, 0.9]) {
+      mk("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: cssv(v === 0.5 ? "--ink-2" : "--grid"), "stroke-dasharray": v === 0.5 ? "4 4" : "none" }, svg);
+      mk("text", { x: m.l - 6, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: cssv("--muted") }, svg).textContent = F(v, 1);
+    }
+    mk("text", { x: W - m.r, y: y(0.5) - 6, "text-anchor": "end", "font-size": 11, fill: cssv("--ink-2") }, svg).textContent = "угадывание";
+    iss.forEach((s, i) => { mk("text", { x: x(i), y: Hh - 8, "text-anchor": "middle", "font-size": 11, fill: cssv("--muted") }, svg).textContent = ISS_SHORT[s]; });
+    const st = { frost: { c: "--ink", w: 2.6, dash: "none", r: 4.5 }, nofrost: { c: "--s-nofrost", w: 1.8, dash: "6 4", r: 3.5 }, precip: { c: "--s-ref", w: 1.8, dash: "2 3", r: 3.5 } };
+    for (const mdl of ["precip", "nofrost", "frost"]) {
+      const v = iss.map(s => APP.scores.find(r => r.model === mdl && r.issue === s).auc);
+      mk("path", { d: v.map((a, i) => (i ? "L" : "M") + x(i) + "," + y(a)).join(""), fill: "none", stroke: cssv(st[mdl].c), "stroke-width": st[mdl].w, "stroke-dasharray": st[mdl].dash }, svg);
+      v.forEach((a, i) => mk("circle", { cx: x(i), cy: y(a), r: st[mdl].r, fill: mdl === "frost" ? cssv("--ink") : cssv("--surface"), stroke: cssv(st[mdl].c), "stroke-width": 1.6 }, svg));
+    }
+    legend($("c-legend"), [{ kind: "line", text: "HBV-Frost, с мёрзлой почвой" }, { kind: "line", dash: true, text: "та же модель без мёрзлой почвы" }, { kind: "line", color: "--s-ref", text: "только осадки зимы, без модели" }]);
+
+    // таблица
+    const tb = $("c-tbody"); tb.replaceChildren();
+    for (const s of iss) {
+      const a = APP.scores.find(r => r.model === "frost" && r.issue === s), b = APP.scores.find(r => r.model === "nofrost" && r.issue === s), c = APP.scores.find(r => r.model === "precip" && r.issue === s);
+      const tr = h("tr");
+      for (const v of [s, `${F(a.auc, 2)} (p ${F(a.p_auc, 3)})`, `${F(a.bss, 2)} (${a.bss_ci.replace("…", " … ").replace(/\./g, ",").replace(/-/g, "−")})`, a.hits, String(a.fa), F(b.auc, 2), F(c.auc, 2)]) tr.appendChild(h("td", null, v));
+      tb.appendChild(tr);
+    }
+    // что значили уровни риска
+    const rt = $("c-risk"); rt.replaceChildren();
+    for (const s of iss) {
+      const tr = h("tr"); tr.appendChild(h("td", null, s));
+      for (const b of RISK_BINS) {
+        const g = APP.hind.frost[s].filter(r => r.p >= b[0] && r.p < b[1]), k = g.filter(r => r.obs >= THR).length;
+        tr.appendChild(h("td", null, g.length ? `${k} из ${g.length}` : "нет таких лет"));
+      }
+      rt.appendChild(tr);
+    }
+    // полоса по годам
+    const rows = APP.hind.frost[C.iss], sv = $("c-years"), W2 = Math.max(280, sv.clientWidth || 600), H2 = +sv.getAttribute("height");
+    sv.setAttribute("viewBox", `0 0 ${W2} ${H2}`); sv.replaceChildren();
+    const mm = { l: 34, r: 8, t: 10, b: 24 }, bw = (W2 - mm.l - mm.r) / rows.length, yy = v => H2 - mm.b - v * (H2 - mm.t - mm.b);
+    for (const v of [0, 0.5, 1]) {
+      mk("line", { x1: mm.l, x2: W2 - mm.r, y1: yy(v), y2: yy(v), stroke: cssv(v === 0.5 ? "--ink-2" : "--grid"), "stroke-dasharray": v === 0.5 ? "4 4" : "none" }, sv);
+      mk("text", { x: mm.l - 5, y: yy(v) + 4, "text-anchor": "end", "font-size": 10.5, fill: cssv("--muted") }, sv).textContent = `${100 * v} %`;
+    }
+    rows.forEach((r, i) => {
+      const big = r.obs >= THR, x0 = mm.l + i * bw + bw * 0.15, ww = bw * 0.7;
+      mk("rect", { x: x0, y: yy(r.p), width: ww, height: Math.max(1, yy(0) - yy(r.p)), fill: big ? cssv("--ink") : cssv("--surface"), stroke: cssv("--ink"), "stroke-width": 1.2 }, sv);
+      if (i % (bw < 18 ? 3 : 2) === 0) mk("text", { x: x0 + ww / 2, y: H2 - 8, "text-anchor": "middle", "font-size": 10, fill: cssv("--muted") }, sv).textContent = String(r.y).slice(2);
+    });
+    $("c-years-sub").textContent = `Вероятность большого паводка в прогнозе на ${C.iss} для каждого года. Чёрные столбики показывают годы, когда большой паводок был.`;
+    for (const b of document.querySelectorAll("#c-issues button")) b.setAttribute("aria-pressed", String(b.dataset.iss === C.iss));
+    const pd = APP.paired.find(r => r.issue === "1 декабря" && r.metric === "AUC" && r.cmp.indexOf("без мёрзлой") > 0);
+    $("c-dec").textContent = `Главное новое. Уже с 1 декабря, когда снега почти нет, модель с мёрзлой почвой отличает большие паводки от малых (AUC ${F(APP.scores.find(r => r.model === "frost" && r.issue === "1 декабря").auc, 2)}), а без мёрзлой почвы не отличает (${F(APP.scores.find(r => r.model === "nofrost" && r.issue === "1 декабря").auc, 2)}). Разница ${F(pd.diff, 2)}, 95 % интервал от ${pd.ci.split("…")[0].replace("+", "").replace(".", ",")} до ${pd.ci.split("…")[1].replace("+", "").replace(".", ",")}. Значит, осенняя влажность почвы и мерзлота несут информацию о будущем паводке.`;
+  }
+  function bindCheck() {
+    const box = $("c-issues");
+    for (const iss of APP.issues) { const b = h("button", null, iss); b.type = "button"; b.dataset.iss = iss; b.addEventListener("click", () => { C.iss = iss; renderCheck(); }); box.appendChild(b); }
+  }
+
+  /* ------------------------------------------------------------ запуск */
+  function computeAll() { FC = forecast(); renderForecast(); }
+  function renderAll() { if (FC) renderForecast(); renderPast(); renderCheck(); if ($("math").open) renderLab(); }
+  bindInput(); bindPast(); bindCheck();
+  $("foot-built").textContent = `Данные приложения собраны ${dText(ENG.parse(APP.built))} ${APP.built.slice(0, 4)} года`;
+  computeAll(); renderPast(); renderCheck();
+  $("btn-refresh").addEventListener("click", () => refresh(true));
+  $("btn-refresh-2").addEventListener("click", () => refresh(true));
+  $("btn-print").addEventListener("click", () => { buildBulletin(); window.print(); });
+  addEventListener("beforeprint", buildBulletin);
+  $("btn-csv").addEventListener("click", downloadCSV);
+  $("btn-share").addEventListener("click", share);
+  $("btn-csv-hind").addEventListener("click", downloadHindCSV);
+  $("btn-install").addEventListener("click", async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch (e) { /* закрыли окно */ } installEvt = null; $("btn-install").hidden = true; });
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone) $("ios-hint").hidden = false;
+  $("u-alarm-btn").addEventListener("click", e => { const m = +e.currentTarget.dataset.m; if (!m) return; U.winter = m; $("u-winter").value = m; renderInput(); $("u-tiles").scrollIntoView({ behavior: "smooth", block: "nearest" }); });
+  $("lab-h").addEventListener("input", renderLab);
+  $("math").addEventListener("toggle", () => { if ($("math").open) renderLab(); });
+  renderParams();
+  let raf = 0, lastW = innerWidth;
+  addEventListener("resize", () => { if (innerWidth === lastW) return; lastW = innerWidth; cancelAnimationFrame(raf); raf = requestAnimationFrame(renderAll); });
+  if (navigator.onLine !== false) refresh(false);
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
+})();
+
 </script>
 </body>
 </html>
