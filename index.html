@@ -1502,7 +1502,7 @@ const ENG = (() => {
     $("es-1").textContent = SEASON.P.length ? `Погода ERA5 с ${dText(ENG.parse(SEASON.start))} по ${lastTxt}` : "Сезон только начался, погоды пока нет";
     $("es-2").textContent = `Влага почвы ${F(100 * f.now.sm)} %, снег ${F(f.now.snow)} мм, лёд θ ${F(f.now.theta, 2)}`;
     $("es-3").textContent = `Зима и весна как в каждом из ${YEARS.length} лет, ${APP.params.frost.length} наборов параметров`;
-    $("es-4").textContent = `${nb} ${plural(nb, "вариант", "варианта", "вариантов")} из ${f.peaks.length} ${nb === 1 ? "даёт" : "дают"} пик от 500 м³/⁠с, это ${pct(f.prob)}`;
+    $("es-4").textContent = `${nb} ${plural(nb, "вариант", "варианта", "вариантов")} из ${f.peaks.length} ${plural(nb, "даёт", "дают", "дают")} пик от 500 м³/⁠с, это ${pct(f.prob)}`;
     $("hero-meta").textContent = `Прогноз выпущен ${issueTxt}. Погода ERA5 по ${lastTxt}, ${src}.`;
     $("hero-spring").textContent = `${Y}`;
     $("data-status").textContent = `Погода по ${lastTxt}. ERA5 выходит с задержкой около шести дней, новые сутки появляются каждый день.`;
@@ -1643,8 +1643,8 @@ const ENG = (() => {
     $("w-detail").textContent = det;
     const nb = f.peaks.filter(v => v >= THR).length, bigYears = by.filter(z => z.nbig > 0).sort((a, b) => b.nbig - a.nbig || b.med - a.med).map(z => z.Y);
     let sum = nb === 0 ? `Ни один из ${f.peaks.length} вариантов не даёт большого паводка.`
-      : bigYears.length > 8 ? `Большой паводок получается в ${nb} вариантах из ${f.peaks.length}, при зиме и весне как в ${bigYears.length} годах из ${n}.`
-      : `Большой паводок получается в ${nb} вариантах из ${f.peaks.length}. Для этого зима и весна должны быть как в ${yearsRu(bigYears)} году.`;
+      : bigYears.length > 8 ? `Большой паводок получается в ${nb} ${plural(nb, "варианте", "вариантах", "вариантах")} из ${f.peaks.length}, при зиме и весне как в ${bigYears.length} годах из ${n}.`
+      : `Большой паводок получается в ${nb} ${plural(nb, "варианте", "вариантах", "вариантах")} из ${f.peaks.length}. Для этого зима и весна должны быть как в ${yearsRu(bigYears)} году.`;
     if (ex) {
       const e = ex.c;
       sum += ex.down
