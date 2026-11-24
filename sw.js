@@ -1,6 +1,6 @@
 /* Офлайн-режим: сначала сеть, без сети берём сохранённую копию. Погода Open-Meteo не кэшируется здесь. */
-const CACHE = "flood-v2";
-const ASSETS = ["./", "index.html", "data.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "qr_flood.png"];
+const CACHE = "flood-v3";
+const ASSETS = ["./", "index.html", "data.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png", "favicon-32.png", "icon.svg", "qr_flood.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(ASSETS.map(a => c.add(a).catch(() => null)))).then(() => self.skipWaiting()));
 });
